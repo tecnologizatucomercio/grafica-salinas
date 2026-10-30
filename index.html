@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo Gráfica Salinas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: barra con 4 vistas (A vendedor, B cliente arma su plancha, C revendedor, dueño). Colores de proceso: magenta, cyan, amarillo oscuro */
+  --bg:#f2f3f5; --surface:#ffffff; --surface-2:#e9ebef; --ink:#15171c; --muted:#5a616c; --line:#d7dae0;
+  --a:#b3195a; --b:#00739e; --c:#9a5b00; --on-accent:#ffffff;
+  --ok:#1d7448; --warn:#9a6412; --crit:#b42318;
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:10px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121418;--surface:#1a1d22;--surface-2:#24282f;--ink:#eceef1;--muted:#a4abb5;--line:#30353d;--a:#f0649f;--b:#3db7e6;--c:#e3a63c;--on-accent:#101216;--ok:#4fc68e;--warn:#e3a94b;--crit:#f26a5f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121418;--surface:#1a1d22;--surface-2:#24282f;--ink:#eceef1;--muted:#a4abb5;--line:#30353d;--a:#f0649f;--b:#3db7e6;--c:#e3a63c;--on-accent:#101216;--ok:#4fc68e;--warn:#e3a94b;--crit:#f26a5f;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.01em;text-wrap:balance;margin:0;line-height:1.2}
+h2{font-size:18px} p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--m,var(--b)) 55%,transparent);outline-offset:2px}
+header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1200px;margin:0 auto;padding:10px 16px 0;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmyk{display:grid;grid-template-columns:repeat(2,11px);gap:2px}
+.cmyk i{width:11px;height:11px;display:block;border-radius:2px}
+.brand h1{font-size:19px}
+.brand .sub{color:var(--muted);font-size:12.5px}
+.flag{margin-left:auto;font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:3px 10px}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tab{appearance:none;border:0;background:none;font:600 14px var(--body);color:var(--muted);padding:9px 12px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--tc)}
+.k{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:var(--tc);color:var(--on-accent);font:800 12px var(--display)}
+.cnt{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--crit);color:#fff;font-size:11.5px;font-weight:700}
+main{max-width:1200px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.intro{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--m);background:var(--surface);border-radius:var(--r)}
+.intro p{color:var(--muted);max-width:80ch}
+.mb{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;border-radius:7px;background:var(--m);color:var(--on-accent);font:800 14px var(--display)}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.cardhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 14px var(--body);padding:8px 13px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;line-height:1.25;text-align:center}
+.btn:hover{border-color:var(--m)}
+.btn.primary{background:var(--m);border-color:var(--m);color:var(--on-m,var(--on-accent))}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.big{padding:12px 16px;font-size:15px;width:100%}
+.btn.mp{background:#009ee3;border-color:#009ee3;color:#fff;width:100%;padding:12px;font-size:15px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:13px}
+.in{font:500 15px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.in:focus{border-color:var(--m)}
+select.in{appearance:auto}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+label.chk{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+label.chk input{margin-top:3px;accent-color:var(--m);width:17px;height:17px}
+label.chk small{display:block;color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--ink);font:inherit;display:flex;flex-direction:column;gap:2px}
+.opt small{color:var(--muted);font-size:12.5px}
+.opt[aria-pressed="true"]{border-color:var(--m);box-shadow:inset 0 0 0 1px var(--m);background:color-mix(in srgb,var(--m) 8%,var(--surface))}
+h2 .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--m);color:var(--on-accent);font-size:13px;margin-right:8px;vertical-align:2px}
+.lines{list-style:none;margin:0;padding:0}
+.line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.pname{font-weight:600;display:block}
+.ppres{font-size:13px;color:var(--muted);display:block}
+.empty{color:var(--muted);padding:12px 2px}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;padding:2px}
+.sumrow{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.tot{display:flex;justify-content:space-between;gap:10px;font:800 21px var(--display);font-variant-numeric:tabular-nums;padding-top:4px}
+.timer{font-size:13px;font-weight:700;color:var(--m);font-variant-numeric:tabular-nums;border:1px solid color-mix(in srgb,var(--m) 40%,var(--line));padding:2px 9px;border-radius:999px}
+.hook{font-size:13.5px;border-left:3px solid var(--m);padding:6px 10px;background:color-mix(in srgb,var(--m) 7%,var(--surface))}
+.done{border:1px solid color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok) 7%,var(--surface));border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.msg{white-space:pre-wrap;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--surface-2);padding:10px;border-radius:8px;max-height:200px;overflow:auto;margin:0}
+.notice{font-size:13px;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--warn) 12%,var(--surface));color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line))}
+/* plancha */
+.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:52px minmax(0,1fr) 78px 78px 64px auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.item img{width:52px;height:52px;object-fit:contain;background:repeating-conic-gradient(var(--surface-2) 0 25%,var(--surface) 0 50%) 0 0/12px 12px;border:1px solid var(--line);border-radius:6px}
+.item .in{padding:6px 8px;font-size:14px;text-align:right}
+.item label{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;flex-direction:column;gap:2px}
+@media (max-width:640px){.item{grid-template-columns:52px minmax(0,1fr) 1fr 1fr 1fr;}.item .iname{grid-column:2/-1}.item .rm{grid-column:2/-1;justify-self:start}}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.pill.act{background:color-mix(in srgb,var(--crit) 13%,transparent);color:var(--crit)}
+.pill.prog{background:color-mix(in srgb,var(--b) 14%,transparent);color:var(--b)}
+.pill.done{background:var(--surface-2);color:var(--muted)}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
+.drop.over{border-color:var(--m);background:color-mix(in srgb,var(--m) 6%,var(--surface))}
+.rollwrap{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:10px}
+.rollwrap canvas{display:block;margin:0 auto;max-width:100%;height:auto}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface-2);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column}
+.stat span{font-size:12px;color:var(--muted);font-weight:600}
+.stat b{font:800 18px var(--display);font-variant-numeric:tabular-nums}
+.meter{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--m)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.vgrid.over{outline:2px dashed var(--m);outline-offset:4px}
+.vtile{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;font:600 12.5px/1.25 var(--body);color:var(--ink);text-align:center}
+.vtile:hover{border-color:var(--m)}
+.vtile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--surface-2);display:block}
+.vupload{justify-content:center;align-items:center;border:2px dashed color-mix(in srgb,var(--m) 55%,var(--line));min-height:136px;background:color-mix(in srgb,var(--m) 5%,var(--surface))}
+.vupload small{color:var(--muted);font-weight:500}
+.vu-ico{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--m);color:var(--on-accent);font:800 22px/1 var(--display)}
+.vupload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+.vupload:focus-within{outline:3px solid color-mix(in srgb,var(--m) 55%,transparent);outline-offset:2px}
+.vprev{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:var(--surface-2);border-radius:8px}
+.vprev canvas{box-shadow:0 1px 4px rgba(0,0,0,.22);background:#fff;max-width:100%}
+.flabel{font-size:13px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px}
+.opts3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.opts3c{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.opts2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.calmsg{font-size:13.5px;padding:8px 10px;border-radius:8px;background:var(--surface-2)}
+.calmsg.ok{background:color-mix(in srgb,var(--ok) 13%,var(--surface));color:var(--ink)}
+.calmsg.media{background:color-mix(in srgb,var(--warn) 13%,var(--surface))}
+.calmsg.baja{background:color-mix(in srgb,var(--crit) 12%,var(--surface))}
+.pitems{list-style:none;margin:0;padding:0}
+.pitem{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.pdims{display:grid;grid-template-columns:repeat(3,minmax(0,78px));gap:6px;margin-top:6px}
+.pdims .f{font-size:11.5px}
+.pdims .in{padding:6px;text-align:center}
+.pdims .in[aria-invalid="true"]{border-color:var(--crit);background:color-mix(in srgb,var(--crit) 8%,var(--surface))}
+.opts5{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px}
+.subtabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.subtab{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:10px 14px;cursor:pointer;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.subtab b{font:700 15px var(--body)}
+.subtab small{color:var(--muted);font-size:12.5px}
+.subtab[aria-selected="true"]{border-color:var(--m);box-shadow:inset 0 0 0 1px var(--m);background:color-mix(in srgb,var(--m) 7%,var(--surface))}
+.optline{min-height:1.3em;margin:0;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 13.5px var(--body);cursor:pointer;display:inline-flex;align-items:baseline;gap:6px;line-height:1.25;text-align:left}
+.chip small{color:var(--muted);font-size:12px;font-weight:500}
+.chip:hover{border-color:color-mix(in srgb,var(--m) 50%,var(--line))}
+.chip[aria-pressed="true"]{border-color:var(--m);background:color-mix(in srgb,var(--m) 10%,var(--surface));font-weight:700}
+.chips.seg .chip{font-weight:600;background:var(--surface-2)}
+.chips.seg .chip[aria-pressed="true"]{background:var(--m);color:var(--on-m);border-color:var(--m)}
+.matinfo{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--surface-2)}
+.btn.wa{background:#1f8f4e;border-color:#1f8f4e;color:#fff}
+.btn.wa:hover{background:#18763f}
+.proof{margin:8px 0;padding:8px;border-radius:10px;background:var(--surface-2);text-align:center}
+.proof img{max-width:100%;max-height:260px;display:block;margin:0 auto 4px}
+.proof small{color:var(--muted)}
+.okdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px;vertical-align:1px}
+.pitem img{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.pitem .pill{margin-top:3px}
+.tip{border-left:3px solid var(--m);padding:6px 10px;background:var(--surface-2);border-radius:0 8px 8px 0}
+/* dueño */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi span{font-size:13px;color:var(--muted);font-weight:600}
+.kpi b{font:800 24px var(--display);font-variant-numeric:tabular-nums}
+.orders{list-style:none;margin:0;padding:0}
+.order{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,auto);gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.order .who b{display:block}
+.oact{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+@media (max-width:720px){.order{grid-template-columns:auto minmax(0,1fr) auto}.oact{grid-column:1/-1;justify-content:flex-start}}
+.odet{grid-column:1/-1;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.odet summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:14px;color:var(--muted)}
+.odet[open] summary{border-bottom:1px solid var(--line);color:var(--ink)}
+.detgrid{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr);gap:16px;padding:12px}
+@media (max-width:720px){.detgrid{grid-template-columns:1fr}}
+.dinfo{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;font-size:14px;align-content:start}
+.dinfo dt{color:var(--muted)} .dinfo dd{margin:0;font-weight:600}
+.tablewrap{overflow-x:auto}
+table.det,table.cmp,table.cfg{border-collapse:collapse;width:100%;font-size:14px}
+table.det{min-width:420px} table.cmp{min-width:680px}
+.det th,.det td,.cmp th,.cmp td,.cfg th,.cfg td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.det thead th,.cfg thead th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.cmp thead th{font:800 15px var(--display);white-space:nowrap}
+.cmp th[scope="row"]{color:var(--muted);font-weight:600;width:20%}
+.cmp .mb{width:22px;height:22px;font-size:12px;margin-right:6px;vertical-align:-5px}
+.r{text-align:right!important}
+.cfg .in{padding:5px 8px;font-size:14px;text-align:right;max-width:130px}
+.owner-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.owner-grid{grid-template-columns:1fr}}
+.modal-bg{position:fixed;inset:0;background:rgba(8,10,14,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal-bg.open{display:flex}
+.phone{width:min(370px,100%);background:var(--surface);color:var(--ink);border-radius:28px;border:9px solid #0d0f12;padding:16px;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.phone-head{display:flex;gap:10px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.logo{width:40px;height:40px;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.logo i{display:block}
+.phone-head small{display:block;color:var(--muted);font-size:12px}
+.ok-big{font:800 22px var(--display);color:var(--ok)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:30;display:none;max-width:90vw;text-align:center}
+.toast.show{display:block}
+.solobtn{margin-left:8px}
+.realnote{font-size:12.5px;color:var(--muted);margin:2px 0 8px;line-height:1.4}
+.solobar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:6px 0 10px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--b) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--b) 35%,var(--line));font-size:13.5px}
+.solobar[hidden]{display:none!important}
+body.solo-fijo .solobar{display:none!important}
+.vencido{position:fixed;inset:0;z-index:50;background:rgba(15,17,22,.72);display:grid;place-items:center;padding:20px}
+.vencido .vbox{background:var(--surface);border-radius:16px;padding:24px;max-width:420px;display:flex;flex-direction:column;gap:12px;text-align:center}
+body.solo nav.tabs,body.solo .realnote,body.solo .solobtn,body.solo #app .intro{display:none!important}
+@media (max-width:600px){.solobtn{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="brand">
+    <span class="cmyk" aria-hidden="true"><i style="background:#00a3d9"></i><i style="background:#d6246e"></i><i style="background:#f2c200"></i><i style="background:#15171c"></i></span>
+    <div><h1 id="brandname">Demo Gráfica Salinas</h1><span class="sub">Marqués de Avilés, Hurlingham · armá el pliego, cotizá y mandá el PDF a imprimir</span></div>
+    <span class="flag">Precios de ejemplo · pagos simulados</span><button type="button" class="btn sm solobtn" data-act="solo">Ver lo que ve el cliente</button>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Vistas"></nav><p class="realnote" id="realnote">Demo: acá ves las 4 partes juntas para conocerlas. En la versión real cada uno tiene su propio acceso: el cliente recibe un link con <b>solo su sección</b>, el vendedor usa la app en el mostrador y el panel del dueño va con clave.</p><div class="solobar" id="solobar" hidden><span><b>Así lo ve tu cliente.</b> Es una app aparte, solo con su sección: no ve el vendedor, ni el panel, ni los precios de compra.</span><button type="button" class="btn sm" data-act="solo">Volver al demo completo</button></div>
+</div></header>
+<main id="app"></main>
+<div class="modal-bg" id="modal" role="dialog" aria-modal="true" aria-label="Vista del cliente"><div id="modal-body"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- utilidades ---------- */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>'$ '+Math.round(n).toLocaleString('es-AR');
+const fN=(n,d)=>Number(n).toLocaleString('es-AR',{maximumFractionDigits:d??2,minimumFractionDigits:0});
+const r100=n=>Math.round(n/100)*100;
+const num=v=>{const x=parseFloat(String(v).replace(',','.'));return isFinite(x)&&x>0?x:0;};
+const pad=n=>String(n).padStart(4,'0');
+const mmss=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+const ago=t=>{const m=Math.round((Date.now()-t)/60000);if(m<1)return 'recién';if(m<60)return 'hace '+m+' min';return 'hace '+Math.round(m/60)+' h';};
+const pct=x=>Math.round(x*100)+'%';
+const $=id=>document.getElementById(id);
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2600);}
+
+/* ===== CONFIGURACIÓN DE LA PRUEBA (lo único que hay que tocar) =====
+   PRUEBA_HASTA: fecha y hora en que vence la prueba. Vacío = sin vencimiento.
+   Ejemplo: '2026-11-03T20:00'
+   CONTACTO_WA: tu WhatsApp para que te escriban cuando vence. */
+const PRUEBA_HASTA='';
+const CONTACTO_WA='';
+const CONTACTO_NOMBRE='Sebastián · Tecnologizá tu comercio';
+/* ================================================================== */
+const STORE={name:'Gráfica Salinas',addr:'Marqués de Avilés, Hurlingham',wa:'11 5555 2345',web:'graficasalinas.github.io'};
+const GREMIO=0.15;
+
+/* ---------- precios y materiales ---------- */
+const MATS=[
+ {id:'vin',name:'Vinilo blanco brillante',hint:'Calcos, ploteos, vidrieras',m2:18000,roll:1270,rolls:[610,1070,1270,1370,1520]},
+ {id:'vinmate',name:'Vinilo blanco mate',hint:'Sin reflejos: carteles interiores, cartelería',m2:18000,roll:1270,rolls:[610,1070,1270,1370,1520]},
+ {id:'vintr',name:'Vinilo transparente',hint:'Vidrios y acrílicos: se ve el fondo',m2:20000,roll:1270,rolls:[1070,1270,1370]},
+ {id:'vinlam',name:'Vinilo impreso + laminado',hint:'Más duración, resiste roce y agua',m2:26000,roll:1270,rolls:[1070,1270,1370,1520]},
+ {id:'stk',name:'Stickers troquelados',hint:'Impreso + corte de contorno',m2:31000,roll:600,rolls:[600,760]},
+ {id:'micro',name:'Vinilo microperforado',hint:'Vidrieras y lunetas: se ve desde adentro',m2:22000,roll:1270,rolls:[1070,1270,1370,1520]},
+ {id:'esmer',name:'Vinilo esmerilado',hint:'Efecto arenado para vidrios y mamparas',m2:24000,roll:1220,rolls:[1220,1270]},
+ {id:'back',name:'Backlight',hint:'Cajas de luz y carteles luminosos',m2:30000,roll:1370,rolls:[1070,1370,1520]},
+ {id:'lona',name:'Lona front',hint:'Carteles y banners de exterior',m2:14000,roll:1500,rolls:[1070,1370,1500,1600,2200,3200]},
+ {id:'blackout',name:'Lona blackout',hint:'Doble faz, no transparenta',m2:19000,roll:1600,rolls:[1370,1600,2200]},
+ {id:'mesh',name:'Lona mesh',hint:'Microperforada: deja pasar el viento',m2:17000,roll:1600,rolls:[1370,1600,2200]},
+ {id:'canvas',name:'Canvas (tela para cuadros)',hint:'Cuadros y decoración, con o sin bastidor',m2:32000,roll:1270,rolls:[1070,1270]},
+ {id:'foto',name:'Papel fotográfico en rollo',hint:'Fotos grandes y pósters',m2:21000,roll:914,rolls:[610,914,1118]},
+ {id:'blueback',name:'Papel blueback',hint:'Afiches para vía pública',m2:7000,roll:1070,rolls:[914,1070,1370]},
+ {id:'obra',name:'Papel obra para plotter',hint:'Planos y bocetos',m2:4000,roll:914,rolls:[610,914]},
+ {id:'iman',name:'Vinilo magnético',hint:'Imanes para heladera y vehículos',m2:45000,roll:610,rolls:[610]},
+ {id:'corte',name:'Vinilo de corte (un color)',hint:'Letras y logos sin fondo',m2:16000,roll:610,rolls:[610]}
+];
+const matBy=id=>MATS.find(m=>m.id===id)||SHEETMATS.find(m=>m.id===id);
+const UNITS=[
+ {id:'tarj100',name:'Tarjetas personales 9 × 5 cm, 300 g',pres:'x 100',price:12500},
+ {id:'tarj500',name:'Tarjetas personales 9 × 5 cm, 300 g',pres:'x 500',price:38000},
+ {id:'fol100',name:'Folletos A5 color, ilustración 115 g',pres:'x 100',price:24000},
+ {id:'fol500',name:'Folletos A5 color, ilustración 115 g',pres:'x 500',price:62000},
+ {id:'afA3',name:'Afiche A3 ilustración 150 g',pres:'unidad',price:1800},
+ {id:'stkc',name:'Stickers circulares 5 cm (precorte)',pres:'x 100',price:21000},
+ {id:'etq',name:'Etiquetas rectangulares 5 × 3 cm',pres:'x 200',price:26000},
+ {id:'ojal',name:'Ojales para lona',pres:'unidad',price:350},
+ {id:'rollup',name:'Roll-up 0,85 × 2 m con estructura',pres:'unidad',price:145000},
+ {id:'talon',name:'Talonario A5 duplicado 50 juegos',pres:'unidad',price:9500},
+ {id:'imanes',name:'Imanes 5 × 5 cm',pres:'x 100',price:32000},
+ {id:'sobres',name:'Sobres impresos americanos',pres:'x 100',price:28000},
+ {id:'carpetas',name:'Carpetas con solapa A4',pres:'x 50',price:65000},
+ {id:'sellos',name:'Sello automático 4 × 2 cm',pres:'unidad',price:22000},
+ {id:'banderas',name:'Bandera de tela 90 × 150 cm',pres:'unidad',price:38000},
+ {id:'coloch',name:'Colocación de vinilo en vidriera o vehículo',pres:'por hora',price:20000},
+ {id:'dis',name:'Diseño o armado de archivo',pres:'por hora',price:15000}
+];
+const unitBy=id=>UNITS.find(u=>u.id===id);
+const CFG={calO:'sinperdida',gap:5,gapPl:3,gapLona:20,margin:10,marginPl:5,cobro:'ml',minMl:0.3};
+
+/* ---------- galería de diseños de ejemplo (dibujados, sin marcas reales) ---------- */
+function canvasPNG(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);return c.toDataURL('image/png');}
+function rnd(seed){let s=seed;return ()=>(s=(s*1103515245+12345)%2147483648)/2147483648;}
+const GALLERY=[
+ {name:'Mármol blanco',draw:[2000,2500,(x,w,h)=>{x.fillStyle='#f3f1ee';x.fillRect(0,0,w,h);const r=rnd(7);for(let i=0;i<46;i++){x.strokeStyle=`rgba(${110+r()*40|0},${110+r()*40|0},${120+r()*40|0},${0.08+r()*0.28})`;x.lineWidth=1+r()*7;x.beginPath();let px=r()*w,py=-50;x.moveTo(px,py);for(let k=0;k<6;k++){const nx=px+(r()-0.5)*700,ny=py+h/5;x.bezierCurveTo(px+(r()-0.5)*500,py+h/12,nx+(r()-0.5)*500,ny-h/12,nx,ny);px=nx;py=ny;}x.stroke();}}]},
+ {name:'Frase Hogar dulce hogar',draw:[2000,2500,(x,w,h)=>{x.fillStyle='#EFE6D8';x.fillRect(0,0,w,h);x.strokeStyle='#7A5C3E';x.lineWidth=18;x.strokeRect(110,110,w-220,h-220);x.fillStyle='#4A3726';x.textAlign='center';x.font='italic bold 260px Georgia';x.fillText('Hogar',w/2,1030);x.font='italic 190px Georgia';x.fillText('dulce',w/2,1300);x.font='italic bold 260px Georgia';x.fillText('hogar',w/2,1610);}]},
+ {name:'Flores',draw:[1800,1800,(x,w,h)=>{x.fillStyle='#FBF3E8';x.fillRect(0,0,w,h);const r=rnd(21);const cols=['#E07A5F','#F2CC8F','#81B29A','#3D405B','#E9A0B4'];for(let i=0;i<34;i++){const cx=r()*w,cy=r()*h,rr=50+r()*90,c=cols[i%cols.length];for(let p=0;p<6;p++){const a=p*Math.PI/3;x.fillStyle=c;x.beginPath();x.ellipse(cx+Math.cos(a)*rr*.7,cy+Math.sin(a)*rr*.7,rr*.5,rr*.32,a,0,Math.PI*2);x.fill();}x.fillStyle='#F2CC8F';x.beginPath();x.arc(cx,cy,rr*.3,0,Math.PI*2);x.fill();}}]},
+ {name:'Geométrico',draw:[1800,1800,(x,w,h)=>{const cols=['#264653','#2A9D8F','#E9C46A','#F4A261','#E76F51'];const n=6,s=w/n;const r=rnd(3);for(let i=0;i<n;i++)for(let j=0;j<n;j++){x.fillStyle=cols[(i+j)%5];x.fillRect(i*s,j*s,s,s);x.fillStyle=cols[(i*2+j+2)%5];x.beginPath();if(r()>.5){x.moveTo(i*s,j*s);x.lineTo(i*s+s,j*s);x.lineTo(i*s,j*s+s);}else{x.moveTo(i*s+s,j*s+s);x.lineTo(i*s,j*s+s);x.lineTo(i*s+s,j*s);}x.fill();}}]},
+ {name:'Logo Café Luna',draw:[900,900,(x)=>{x.fillStyle='#ffffff';x.fillRect(0,0,900,900);x.fillStyle='#0E7C86';x.beginPath();x.arc(450,450,440,0,Math.PI*2);x.fill();x.fillStyle='#F4C542';x.beginPath();x.arc(450,360,170,0,Math.PI*2);x.fill();x.fillStyle='#0E7C86';x.beginPath();x.arc(520,320,150,0,Math.PI*2);x.fill();x.fillStyle='#fff';x.font='bold 120px Arial';x.textAlign='center';x.fillText('CAFÉ LUNA',450,700);}]},
+ {name:'Sticker ¡Nuevo!',draw:[800,800,(x)=>{x.fillStyle='#ffffff';x.fillRect(0,0,800,800);x.fillStyle='#E4572E';x.beginPath();for(let i=0;i<10;i++){const r=i%2?170:390,a=-Math.PI/2+i*Math.PI/5;x.lineTo(400+r*Math.cos(a),410+r*Math.sin(a));}x.closePath();x.fill();x.fillStyle='#fff';x.font='bold 96px Arial';x.textAlign='center';x.fillText('¡NUEVO!',400,445);}]},
+ {name:'Etiqueta Miel pura',draw:[1200,600,(x,w,h)=>{x.fillStyle='#FFF4D6';x.fillRect(0,0,w,h);x.strokeStyle='#B5651D';x.lineWidth=24;x.strokeRect(30,30,w-60,h-60);x.fillStyle='#B5651D';x.font='bold 170px Georgia';x.textAlign='center';x.fillText('Miel pura',600,300);x.font='70px Arial';x.fillText('de monte · 500 g',600,430);}]},
+ {name:'Cartel Liquidación',draw:[2400,800,(x,w,h)=>{x.fillStyle='#1B3A8C';x.fillRect(0,0,w,h);x.fillStyle='#F2C200';x.fillRect(0,h-120,w,120);x.fillStyle='#fff';x.font='bold 300px Arial';x.textAlign='center';x.fillText('LIQUIDACIÓN',w/2,450);x.fillStyle='#1B3A8C';x.font='bold 80px Arial';x.fillText('TODO CON 30% OFF',w/2,h-35);}]}
+];
+GALLERY.forEach(g=>{const [w,h,fn]=g.draw;g.src=canvasPNG(w,h,fn);g.img=new Image();g.img.onload=()=>{g.thumb=thumbOf(g.img);scheduleDraw();};g.img.src=g.src;});
+let itemSeq=1;
+function makeItem(gi,wmm,hmm,qty,ajuste){const g=GALLERY[gi];return {id:'i'+(itemSeq++),name:g.name,src:g.src,img:g.img,get thumb(){return g.thumb||g.src;},wmm,hmm,qty,ajuste:ajuste||'recortar'};}
+function sampleItems(set){
+  if(set==='B')return [makeItem(0,200,250,4),makeItem(1,200,250,2)];
+  if(set==='P')return [makeItem(4,50,50,30),makeItem(6,80,40,14),makeItem(5,70,70,6)];
+  return [makeItem(4,50,50,40),makeItem(5,70,70,24)];
+}
+
+/* ---------- formatos: rollo (ancho fijo, largo libre) o pliego (medida fija) ---------- */
+MATS.forEach(m=>m.type='rollo');
+const SHEETMATS=[
+ {id:'obra80',type:'pliego',name:'Papel obra 80 g',hint:'Fotocopias, formularios, apuntes',pl:500},
+ {id:'ilus115',type:'pliego',name:'Ilustración 115 g',hint:'Folletos y volantes',pl:1100},
+ {id:'ilus',type:'pliego',name:'Ilustración 150 g',hint:'Afiches, flyers, menús',pl:1400},
+ {id:'ilus300',type:'pliego',name:'Ilustración 300 g',hint:'Tarjetas, postales, tapas',pl:1900},
+ {id:'opal',type:'pliego',name:'Opalina 210 g',hint:'Tarjetas, invitaciones, colgantes',pl:1900},
+ {id:'kraft',type:'pliego',name:'Cartulina kraft 240 g',hint:'Etiquetas y tarjetas estilo natural',pl:2100},
+ {id:'texturada',type:'pliego',name:'Cartulina texturada 250 g',hint:'Invitaciones y diplomas',pl:2600},
+ {id:'fotopl',type:'pliego',name:'Papel fotográfico 260 g',hint:'Fotos y láminas',pl:2600},
+ {id:'autoad',type:'pliego',name:'Papel autoadhesivo brillante',hint:'Etiquetas y stickers en papel',pl:2400},
+ {id:'autoadm',type:'pliego',name:'Papel autoadhesivo mate',hint:'Etiquetas para escribir encima',pl:2400},
+ {id:'vinpl',type:'pliego',name:'Vinilo autoadhesivo blanco',hint:'Stickers resistentes al agua',pl:4800},
+ {id:'vintrpl',type:'pliego',name:'Vinilo autoadhesivo transparente',hint:'Stickers sin fondo para frascos y vidrios',pl:5200},
+ {id:'imanpl',type:'pliego',name:'Papel imantado',hint:'Imanes de heladera',pl:6500}
+];
+const SIZES=[
+ {id:'a5',n:'A5',w:148,h:210},{id:'a4',n:'A4',w:210,h:297},{id:'carta',n:'Carta',w:216,h:279},{id:'oficio',n:'Oficio',w:216,h:356},
+ {id:'a3',n:'A3',w:297,h:420},{id:'sra3',n:'SRA3',w:320,h:450},{id:'3348',n:'A3+ 33 × 48',w:330,h:480},{id:'3266',n:'Largo 32 × 66',w:320,h:660},
+ {id:'3550',n:'35 × 50',w:350,h:500},{id:'4564',n:'45 × 64',w:450,h:640},{id:'5070',n:'50 × 70',w:500,h:700},{id:'6488',n:'64 × 88',w:640,h:880},{id:'70100',n:'70 × 100',w:700,h:1000},
+ {id:'custom',n:'Personalizado'}];
+const rollsOf=m=>[...new Set([...(m.rolls||[]),m.roll])].sort((a,b)=>a-b);
+/* terminaciones: se suman al precio */
+const TERMS=[
+ {id:'lamb',n:'Laminado brillo',on:'pliego',u:'pl',p:700,grp:'lam'},
+ {id:'lamm',n:'Laminado mate',on:'pliego',u:'pl',p:700,grp:'lam'},
+ {id:'medio',n:'Medio corte',on:'pliego',u:'pl',p:900,only:['autoad','autoadm','vinpl','vintrpl','imanpl']},
+ {id:'guill',n:'Corte a guillotina',on:'pliego',u:'pl',p:300},
+ {id:'puntas',n:'Puntas redondeadas',on:'pliego',u:'pieza',p:15},
+ {id:'lamr',n:'Laminado',on:'rollo',u:'m2',p:8000,only:['vin','vinmate','vintr','micro','foto','back']},
+ {id:'cont',n:'Corte de contorno',on:'rollo',u:'m2',p:9000,only:['vin','vinmate','vintr','vinlam','iman']},
+ {id:'ojal',n:'Ojales cada 50 cm',on:'rollo',u:'ojal',p:350,only:['lona','blackout','mesh']},
+ {id:'bast',n:'Bastidor de madera',on:'rollo',u:'ml',p:6000,only:['canvas']},
+ {id:'coloc',n:'Colocación en el lugar',on:'rollo',u:'m2',p:12000,only:['vin','vinmate','vintr','vinlam','micro','esmer']}
+];
+const termsFor=m=>TERMS.filter(t=>t.on===m.type&&(!t.only||t.only.includes(m.id)));
+const UNITTXT={pl:'por pliego',pieza:'por pieza',m2:'por m²',ojal:'por ojal',ml:'por metro de perímetro'};
+const REF_AREA=320*450;
+const LONAS=['lona','blackout','mesh'];
+function autoGap(m){return m.type==='pliego'?CFG.gapPl:LONAS.includes(m.id)?CFG.gapLona:CFG.gap;}
+function gapOf(st){const m=matBy(st.mat);return st.gapMode==='manual'?Math.max(0,Math.min(100,parseFloat(String(st.gapMm).replace(',','.'))||0)):autoGap(m);}
+function fmtOf(st){const f=fmtBase(st);f.gap=gapOf(st);return f;}
+function fmtBase(st){
+  const m=matBy(st.mat);
+  if(m.type==='rollo'){const W=rollsOf(m).includes(+st.roll)?+st.roll:m.roll;return {type:'rollo',W,H:4800,margin:CFG.margin,label:`Rollo de ${fN(W/10)} cm`,short:`${fN(W/10)} cm`};}
+  let w,h,n;
+  let short;
+  if(st.size==='custom'){w=Math.round(num(st.cw)*10)||320;h=Math.round(num(st.ch)*10)||450;n=`${fN(w/10)} × ${fN(h/10)} cm`;short=`${fN(w/10)} × ${fN(h/10)}`;}
+  else{const s=SIZES.find(z=>z.id===st.size)||SIZES[2];w=s.w;h=s.h;n=`${s.n} (${fN(w/10)} × ${fN(h/10)} cm)`;short=s.n;}
+  return {type:'pliego',W:Math.min(w,h),H:Math.max(w,h),margin:CFG.marginPl,label:`Pliego ${n}`,short};
+}
+const sheetPrice=(m,f)=>r100(m.pl*(f.W*f.H)/REF_AREA);
+
+/* ---------- acomodado: MaxRects (el mismo método de la app Sebrox), en varios pliegos o tramos de rollo ---------- */
+function mrFind(free,w,h,rot,heur){
+  let best=null;
+  for(const f of free){for(const r of (rot?[false,true]:[false])){
+    const ww=r?h:w,hh=r?w:h;if(ww>f.w+1e-6||hh>f.h+1e-6)continue;
+    const lw=f.w-ww,lh=f.h-hh;
+    const s1=heur==='area'?f.w*f.h-ww*hh:heur==='abajo'?f.y+hh:Math.min(lw,lh);
+    const s2=heur==='abajo'?f.x:Math.max(lw,lh);
+    if(!best||s1<best.s1||(s1===best.s1&&s2<best.s2))best={x:f.x,y:f.y,w:ww,h:hh,rot:r,s1,s2};}}
+  return best;
+}
+function mrPlace(free,u){
+  const nuevos=[];
+  const keep=free.filter(f=>{
+    if(u.x>=f.x+f.w||u.x+u.w<=f.x||u.y>=f.y+f.h||u.y+u.h<=f.y)return true;
+    if(u.y>f.y)nuevos.push({x:f.x,y:f.y,w:f.w,h:u.y-f.y});
+    if(u.y+u.h<f.y+f.h)nuevos.push({x:f.x,y:u.y+u.h,w:f.w,h:f.y+f.h-u.y-u.h});
+    if(u.x>f.x)nuevos.push({x:f.x,y:f.y,w:u.x-f.x,h:f.h});
+    if(u.x+u.w<f.x+f.w)nuevos.push({x:u.x+u.w,y:f.y,w:f.x+f.w-u.x-u.w,h:f.h});
+    return false;});
+  const all=keep.concat(nuevos);
+  return all.filter((a,ia)=>!all.some((b,ib)=>ib!==ia&&a.x>=b.x&&a.y>=b.y&&a.x+a.w<=b.x+b.w&&a.y+a.h<=b.y+b.h&&(ib<ia||a.x!==b.x||a.y!==b.y||a.w!==b.w||a.h!==b.h)));
+}
+function runPack(order,BW,BH,rot,heur){
+  const bins=[];
+  for(const p of order){
+    let done=false;
+    for(const b of bins){const u=mrFind(b.free,p.w,p.h,rot,heur);if(u){b.free=mrPlace(b.free,u);b.pl.push({k:p.k,x:u.x,y:u.y,w:u.w,h:u.h,rot:u.rot});b.used=Math.max(b.used,u.y+u.h);done=true;break;}}
+    if(!done){const b={free:[{x:0,y:0,w:BW,h:BH}],pl:[],used:0};const u=mrFind(b.free,p.w,p.h,rot,heur);if(!u)return null;b.free=mrPlace(b.free,u);b.pl.push({k:p.k,x:u.x,y:u.y,w:u.w,h:u.h,rot:u.rot});b.used=u.y+u.h;bins.push(b);}
+  }
+  return bins;
+}
+function shelfBins(order,BW,BH,rot){
+  const bins=[];let b=null;
+  const newBin=()=>{b={sh:[],pl:[],used:0,y:0};bins.push(b);};
+  for(const p of order){
+    let w=p.w,h=p.h,r=false;if(rot&&h>w&&h<=BW){w=p.h;h=p.w;r=true;}if(w>BW){w=p.h;h=p.w;r=!r;}
+    if(!b)newBin();
+    let s=b.sh.find(s=>h<=s.h&&s.x+w<=BW);
+    if(!s){if(b.y+h>BH)newBin();s={y:b.y,h,x:0};b.sh.push(s);b.y+=h;}
+    b.pl.push({k:p.k,x:s.x,y:s.y,w,h,rot:r});s.x+=w;b.used=Math.max(b.used,s.y+h);
+  }
+  return bins;
+}
+const scoreOf=(bins,strip)=>!bins?Infinity:strip?bins.reduce((s,b)=>s+b.used,0)+bins.length*0.001:bins.length*1e7+bins[bins.length-1].used;
+const LCACHE=new Map();
+function sigOf(f,items,rot){return [f.type,f.W,f.H,f.margin,f.gap,rot?1:0,items.map(i=>i.wmm+'x'+i.hmm+'x'+i.qty).join(',')].join('|');}
+function piecesOf(items,f,rot){
+  const g=f.gap,BW=f.W-2*f.margin+g,BH=f.H-2*f.margin+g,ps=[],tooBig=[];
+  items.forEach((it,k)=>{const w=it.wmm+g,h=it.hmm+g;const ok=(w<=BW&&h<=BH)||(rot&&h<=BW&&w<=BH);if(!ok){if(it.qty>0)tooBig.push(k);return;}for(let c=0;c<it.qty;c++)ps.push({k,w,h});});
+  return {ps,tooBig,BW,BH};
+}
+const HEURS=f=>f.type==='rollo'?['abajo','lado','area']:['lado','abajo','area'];
+function baseOrders(ps){return [ps.slice().sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)||b.w*b.h-a.w*a.h),ps.slice().sort((a,b)=>b.w*b.h-a.w*a.h)];}
+function layoutRaw(f,items,rot){
+  const sig=sigOf(f,items,rot);if(LCACHE.has(sig))return LCACHE.get(sig);
+  const {ps,tooBig,BW,BH}=piecesOf(items,f,rot),strip=f.type==='rollo';
+  let best=[],bs=Infinity;
+  if(ps.length){const os=baseOrders(ps);
+    if(ps.length>250){best=shelfBins(os[0],BW,BH,rot);bs=scoreOf(best,strip);}
+    else for(const o of os)for(const h of HEURS(f)){const r=runPack(o,BW,BH,rot,h),s=scoreOf(r,strip);if(s<bs){bs=s;best=r;}}}
+  const raw={bins:(best||[]).map(b=>({used:b.used,pl:b.pl})),tooBig,score:bs,optimized:false};
+  if(LCACHE.size>80)LCACHE.clear();LCACHE.set(sig,raw);return raw;
+}
+function optimizeLayout(f,items,rot,opt){
+  opt=opt||{};const sig=sigOf(f,items,rot),base=layoutRaw(f,items,rot);
+  if(base.optimized&&!opt.force)return false;
+  const {ps,BW,BH}=piecesOf(items,f,rot),strip=f.type==='rollo';
+  if(!ps.length||ps.length>250){base.optimized=true;return false;}
+  let seed=opt.seed||12345;const rnd=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
+  let best=null,bs=base.score;const os=baseOrders(ps),t0=performance.now(),ms=opt.ms||220;
+  for(let t=0;t<400&&performance.now()-t0<ms;t++){const o=os[t%2].slice();
+    if(t%3===2){for(let k=0;k<Math.max(2,o.length/6);k++){const i=Math.floor(rnd()*o.length),j=Math.floor(rnd()*o.length);[o[i],o[j]]=[o[j],o[i]];}}
+    else for(let i=o.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[o[i],o[j]]=[o[j],o[i]];}
+    for(const h of HEURS(f)){const r=runPack(o,BW,BH,rot,h),s=scoreOf(r,strip);if(s<bs-1e-6){bs=s;best=r;}}}
+  if(best){LCACHE.set(sig,{bins:best.map(b=>({used:b.used,pl:b.pl})),tooBig:base.tooBig,score:bs,optimized:true});return true;}
+  base.optimized=true;return false;
+}
+/* estimación rápida (estantes) para calcular cuántas copias entran sin trabar la pantalla */
+function fastBins(f,items,rot){const {ps,tooBig,BW,BH}=piecesOf(items,f,rot);if(tooBig.length)return null;return ps.length?shelfBins(baseOrders(ps)[0],BW,BH,rot):[];}
+function fitsFmt(f,wmm,hmm,rot){const W=f.W-2*f.margin,H=f.H-2*f.margin;return (wmm<=W&&hmm<=H)||(rot&&hmm<=W&&wmm<=H);}
+function layout(f,items,rot){
+  const raw=layoutRaw(f,items,rot),m=f.margin,g=f.gap;
+  const sheets=raw.bins.map(b=>({W:f.W,H:f.type==='rollo'?Math.round(b.used-g+2*m):f.H,placed:b.pl.map(p=>({it:items[p.k],x:m+p.x,y:m+p.y,w:p.w-g,h:p.h-g,rot:p.rot}))}));
+  const area=sheets.reduce((s,sh)=>s+sh.placed.reduce((a,p)=>a+p.w*p.h,0),0);
+  const count=sheets.reduce((s,sh)=>s+sh.placed.length,0);
+  const length=f.type==='rollo'?sheets.reduce((s,sh)=>s+sh.H,0):0;
+  return {fmt:f,sheets,area,count,length,tooBig:raw.tooBig.map(k=>items[k]),optimized:raw.optimized};
+}
+function quote(L,mat,factor,terms){
+  factor=factor||1;let q;
+  if(L.fmt.type==='rollo'){const ml=L.length/1000,m2roll=ml*L.fmt.W/1000,m2d=L.area/1e6,minM2=CFG.minMl*L.fmt.W/1000;
+    const base=CFG.cobro==='ml'?Math.max(m2roll,minM2):Math.max(m2d,minM2);
+    q={kind:'rollo',ml,m2roll,m2d,util:m2roll?m2d/m2roll:0,price:L.count?r100(base*mat.m2*factor):0};}
+  else{const n=L.sheets.length,sp=r100(sheetPrice(mat,L.fmt)*factor),m2d=L.area/1e6,sa=L.fmt.W*L.fmt.H/1e6;q={kind:'pliego',n,sp,m2d,util:n?m2d/(n*sa):0,price:n*sp};}
+  q.base=q.price;q.extras=[];
+  const pieces=L.sheets.flatMap(s=>s.placed);
+  termsFor(mat).filter(t=>(terms||[]).includes(t.id)).forEach(t=>{
+    let cant=0;
+    if(t.u==='pl')cant=q.n||0;else if(t.u==='pieza')cant=pieces.length;else if(t.u==='m2')cant=q.m2d;
+    else if(t.u==='ojal')cant=pieces.reduce((s,p)=>s+Math.max(4,Math.round(2*(p.w+p.h)/500)),0);
+    else if(t.u==='ml')cant=pieces.reduce((s,p)=>s+2*(p.w+p.h)/1000,0);
+    const tot=L.count?r100(cant*t.p*factor):0;if(tot)q.extras.push({id:t.id,n:t.n,cant,u:t.u,tot});q.price+=tot;});
+  return q;
+}
+const stLayout=st=>layout(fmtOf(st),st.items,st.rotate);
+
+/* ---------- estado ---------- */
+function freshP(){return {mat:'autoad',gapMode:'auto',gapMm:'3',terms:['medio'],pg:0,roll:'',size:'sra3',cw:'32',ch:'45',rotate:true,items:[],sel:null,mw:'',mh:'',giro:false,ajuste:'recortar',cant:'1',cal:'sinperdida',cliente:'Panadería Doña Rosa',tel:'11 5555 0306',start:null,sent:null};}
+function freshA(){return {sub:'pliego',lines:[],prod:'m:vin',ancho:'100',alto:'60',cant:'1',cliente:'Laura M.',tel:'11 5555 0303',start:Date.now(),sent:null};}
+const S={view:'vendedor',A:freshA(),B:{mat:'vinlam',gapMode:'auto',gapMm:'3',terms:[],pg:0,roll:'',size:'sra3',cw:'32',ch:'45',rotate:true,items:[],cliente:'',tel:'',sent:null,sel:null,mw:'',mh:'',giro:false,ajuste:'recortar',cant:'1',cal:'normal'},C:{mat:'stk',gapMode:'auto',gapMm:'3',terms:[],pg:0,roll:'',size:'sra3',cw:'32',ch:'45',rotate:true,items:[],markup:'40',cliente:'Kiosco La Esquina',tel:'',sel:null,mw:'',mh:'',giro:false,ajuste:'recortar',cant:'1',cal:'normal'},P:freshP(),O:{open:{}},pedidos:[],next:101,priceUpdated:null};
+S.A.lines=[lineM2('lona',150,80,1),lineUnit('ojal',8)];
+
+function lineM2(matId,a,b,q){const m=matBy(matId);const m2=a*b/10000*q;return {kind:'m2',name:m.name,detail:`${fN(a/100)} × ${fN(b/100)} m × ${q} = ${fN(m2,2)} m²`,q:1,unit:r100(Math.max(m2,0.25)*m.m2),m2};}
+function lineUnit(id,q){const u=unitBy(id);return {kind:'u',name:u.name,detail:u.pres,q,unit:u.price};}
+const lineTotal=l=>l.unit*l.q;
+const pedTotal=p=>p.lines.reduce((s,l)=>s+lineTotal(l),0);
+
+function snapshotPlancha(st,factor){
+  const mat=matBy(st.mat),f=fmtOf(st),L=layout(f,st.items,st.rotate),qq=quote(L,mat,factor,st.terms);
+  return {mat:mat.id,fmt:f,rotate:st.rotate,items:st.items.map(it=>({id:it.id,name:it.name,src:it.src,thumb:it.thumb,wmm:it.wmm,hmm:it.hmm,qty:it.qty,img:it.img,ajuste:it.ajuste})),cal:st.cal||'normal',extras:qq.extras,length:L.length,sheets:L.sheets.length,count:L.count,m2d:qq.m2d,util:qq.util,price:qq.price,sp:qq.sp||0};
+}
+const fmtTxt=pl=>pl.fmt.type==='rollo'?`${fN(pl.fmt.W/1000)} × ${fN(pl.length/1000)} m de rollo`:`${pl.sheets} ${pl.sheets===1?'pliego':'pliegos'} ${pl.fmt.short}`;
+function crearPedido(mode,o){
+  const p={id:S.next++,mode,cliente:(o.cliente||'').trim()||'Cliente sin nombre',tel:o.tel||'',lines:o.lines,plancha:o.plancha||null,estado:o.estado,t:o.t||Date.now(),online:!!o.online,armado:o.armado??null};
+  S.pedidos.unshift(p);return p;
+}
+function planchaLine(pl,label){const m=matBy(pl.mat);const ex=(pl.extras||[]).map(e=>e.n.toLowerCase()).join(', ');return {kind:'pl',name:`${label||'Plancha'} · ${m.name}`,detail:`${fmtTxt(pl)} · ${pl.count} diseños${ex?' · con '+ex:''} · aprovechamiento ${pct(pl.util)}`,q:1,unit:pl.price};}
+/* ---------- guardado en este equipo (IndexedDB): los pedidos no se pierden al cerrar ---------- */
+const DBN='salinas-demo',DBS='kv';
+function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open(DBN,1);r.onupgradeneeded=()=>r.result.createObjectStore(DBS);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
+async function dbGet(k){const db=await idb();return new Promise((res,rej)=>{const t=db.transaction(DBS,'readonly').objectStore(DBS).get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>rej(t.error);});}
+async function dbPut(k,v){const db=await idb();return new Promise((res,rej)=>{const t=db.transaction(DBS,'readwrite');t.objectStore(DBS).put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}
+function itemOut(it){const gi=GALLERY.findIndex(g=>g.src===it.src);return {id:it.id,name:it.name,gi,src:gi>=0?null:it.src,thumb:gi>=0?null:it.thumb,wmm:it.wmm,hmm:it.hmm,qty:it.qty,ajuste:it.ajuste};}
+function itemIn(o){if(o.gi>=0){const g=GALLERY[o.gi];return {id:o.id,name:o.name,src:g.src,img:g.img,get thumb(){return g.thumb||g.src;},wmm:o.wmm,hmm:o.hmm,qty:o.qty,ajuste:o.ajuste};}
+  const im=new Image();im.onload=()=>{if(S.view==='duenio')render();};im.src=o.src;return {id:o.id,name:o.name,src:o.src,img:im,thumb:o.thumb||o.src,wmm:o.wmm,hmm:o.hmm,qty:o.qty,ajuste:o.ajuste};}
+let saveT=null;
+function queueSave(){clearTimeout(saveT);saveT=setTimeout(async()=>{try{await dbPut('estado',{v:1,next:S.next,pedidos:S.pedidos.map(p=>({...p,plancha:p.plancha?{...p.plancha,items:p.plancha.items.map(itemOut)}:null}))});}catch(e){}},400);}
+async function loadSaved(){try{const d=await dbGet('estado');if(!d||!Array.isArray(d.pedidos))return false;
+  S.pedidos=d.pedidos.map(p=>({...p,plancha:p.plancha?{...p.plancha,items:p.plancha.items.map(itemIn)}:null}));S.next=d.next||S.next;return true;}catch(e){return false;}}
+function seed(){
+  const m=x=>Date.now()-x*60000;
+  const it1=sampleItems('B'),it2=sampleItems('C');
+  const plB=snapshotPlancha({mat:'vinlam',rotate:true,items:it1});
+  const plC=snapshotPlancha({mat:'stk',rotate:true,items:it2},1-GREMIO);
+  crearPedido('A',{cliente:'Martín R.',tel:'11 5555 0101',lines:[lineUnit('tarj500',1),lineM2('lona',150,80,1),lineUnit('ojal',8)],estado:'entregado',online:true,armado:110,t:m(240)});
+  crearPedido('B',{cliente:'Sofía L.',tel:'11 5555 0102',lines:[planchaLine(plB)],plancha:plB,estado:'pagado',online:true,t:m(95)});
+  crearPedido('C',{cliente:'Estudio Nube (revendedor)',tel:'11 5555 0103',lines:[planchaLine(plC,'Plancha gremio')],plancha:plC,estado:'preparando',online:true,t:m(70)});
+  const plA=snapshotPlancha({mat:'autoad',size:'sra3',terms:['medio'],rotate:true,items:sampleItems('P')});
+  crearPedido('A',{cliente:'Panadería Doña Rosa',tel:'11 5555 0306',lines:[planchaLine(plA,'Pliego')],plancha:plA,estado:'pagado',armado:75,t:m(25)});
+  crearPedido('A',{cliente:'Pablo G.',tel:'11 5555 0104',lines:[lineUnit('afA3',20),lineUnit('dis',1)],estado:'esperando',armado:85,t:m(40)});
+  crearPedido('B',{cliente:'Carla V.',tel:'11 5555 0105',lines:[planchaLine(plB)],plancha:plB,estado:'confirmar',t:m(12)});
+}
+
+/* ---------- vistas ---------- */
+const MODES={
+  A:{view:'vendedor',tab:'Vendedor',color:'var(--a)',title:'A · El vendedor arma el pliego y cotiza en el mostrador',intro:'Cuando el cliente trae sus imágenes, el vendedor las carga con su medida y la app arma el pliego sola, acomodando todo para que sobre lo menos posible. Sale el PDF a tamaño real para mandar a la impresora, sin editar a mano. Para trabajos a medida (lonas, tarjetas, folletos) cotiza y manda el link de pago por WhatsApp.'},
+  B:{view:'cliente',tab:'Cliente',color:'var(--b)',title:'B · El cliente arma su plancha y la paga',intro:'El cliente elige una imagen de la galería de la gráfica o sube la suya, elige la medida y el ajuste, y la app las acomoda solas en el ancho del rollo. Ve los metros y el precio al instante, paga, y la gráfica recibe el PDF listo para imprimir.'},
+  C:{view:'revendedor',tab:'Revendedor',color:'var(--c)',title:'C · Diseñadores y revendedores con precio de gremio',intro:'Diseñadores, kioscos o emprendedores que te compran seguido arman sus planchas con su descuento y le pasan el presupuesto a su propio cliente. Cada trabajo suyo se imprime acá.'}
+};
+const VIEWS=['vendedor','cliente','revendedor','duenio'];
+const E={esperando:{label:'Link enviado · sin pagar',cls:'warn'},confirmar:{label:'Por WhatsApp · a confirmar',cls:'act'},pagado:{label:'Pagado · a imprimir',cls:'act'},preparando:{label:'Imprimiendo',cls:'prog'},listo:{label:'Listo para retirar',cls:'ok'},entregado:{label:'Entregado',cls:'done'}};
+const FLOW={pagado:['preparando','Mandar a imprimir'],preparando:['listo','Marcar listo'],listo:['entregado','Marcar entregado']};
+
+function tabs(){
+  const pend=S.pedidos.filter(p=>p.estado==='pagado'||p.estado==='confirmar').length;
+  $('tabs').innerHTML=[['A','vendedor'],['B','cliente'],['C','revendedor']].map(([m,v])=>`<button class="tab" role="tab" aria-selected="${S.view===v}" style="--tc:${MODES[m].color}" data-act="tab" data-v="${v}"><span class="k">${m}</span>${MODES[m].tab}</button>`).join('')+`<button class="tab" role="tab" aria-selected="${S.view==='duenio'}" style="--tc:var(--ink)" data-act="tab" data-v="duenio">Panel del dueño${pend?` <span class="cnt" aria-label="${pend} pedidos para atender">${pend}</span>`:''}</button>`;
+}
+function intro(m){return `<div class="intro"><span class="mb">${m}</span><div><h2>${MODES[m].title}</h2><p>${MODES[m].intro}</p></div></div>`;}
+function waLink(tel,text){const d=String(tel||'').replace(/\D/g,'');let n='';if(d.length>=10)n=d.startsWith('54')?d:'549'+d.replace(/^0/,'');return 'https://wa.me/'+n+'?text='+encodeURIComponent(text);}
+function msgProof(p){const l=p.lines[0];return `Hola ${p.cliente}, te paso la prueba de tu pedido #${pad(p.id)} en ${STORE.name}: ${l.name} (${l.detail.replace(/ · aprovechamiento.*$/,'')}).\nTotal: ${fmt(pedTotal(p))}\n\nRevisá el PDF adjunto. Si está todo bien, pagalo acá y lo mandamos a imprimir:\nhttps://${STORE.web}/p/${pad(p.id)}\n\nRetirás por ${STORE.addr}.`;}
+function msgPedido(p){return `Hola ${p.cliente.split(' ')[0]}, te paso tu presupuesto de ${STORE.name}:\n`+p.lines.map(l=>`• ${l.q>1?l.q+' × ':''}${l.name} (${l.detail}): ${fmt(lineTotal(l))}`).join('\n')+`\nTotal: ${fmt(pedTotal(p))}\n\nPagalo acá y pasá a retirar por ${STORE.addr}:\nhttps://${STORE.web}/p/${pad(p.id)}`;}
+
+/* A: vendedor */
+function timerTxt(){return S.A.lines.length?'Cotizando: '+mmss((Date.now()-S.A.start)/1000):'Sin empezar';}
+function prodOptions(){return `<optgroup label="Por metro cuadrado">${MATS.map(m=>`<option value="m:${m.id}" ${S.A.prod==='m:'+m.id?'selected':''}>${esc(m.name)} · ${fmt(m.m2)}/m²</option>`).join('')}</optgroup><optgroup label="Por unidad o cantidad">${UNITS.map(u=>`<option value="u:${u.id}" ${S.A.prod==='u:'+u.id?'selected':''}>${esc(u.name)} ${esc(u.pres)} · ${fmt(u.price)}</option>`).join('')}</optgroup>`;}
+function prodFieldsHTML(){
+  const isM2=S.A.prod.startsWith('m:');
+  let prev='';
+  if(isM2){const m=matBy(S.A.prod.slice(2));const a=num(S.A.ancho),b=num(S.A.alto),q=Math.max(1,Math.round(num(S.A.cant)));const m2=a*b/10000*q;prev=a&&b?`${fN(m2,2)} m² × ${fmt(m.m2)} = <b>${fmt(r100(Math.max(m2,0.25)*m.m2))}</b>${m2<0.25?' (mínimo 0,25 m²)':''}`:'Completá ancho y alto';}
+  else{const u=unitBy(S.A.prod.slice(2));const q=Math.max(1,Math.round(num(S.A.cant)));prev=`${q} × ${fmt(u.price)} = <b>${fmt(u.price*q)}</b>`;}
+  return `${isM2?`<label class="f" for="a-an">Ancho (cm)<input class="in" id="a-an" data-a="ancho" inputmode="decimal" value="${esc(S.A.ancho)}"></label><label class="f" for="a-al">Alto (cm)<input class="in" id="a-al" data-a="alto" inputmode="decimal" value="${esc(S.A.alto)}"></label>`:''}<label class="f" for="a-q">Cantidad<input class="in" id="a-q" data-a="cant" inputmode="numeric" value="${esc(S.A.cant)}"></label><p class="small" id="a-prev" style="grid-column:1/-1">${prev}</p>`;
+}
+function cartAHTML(){
+  const st=S.A;
+  if(st.sent){const p=S.pedidos.find(x=>x.id===st.sent);if(p)return `<div class="card"><div class="done"><h2>Presupuesto #${pad(p.id)} listo para mandar</h2><p>Se generó el link de pago para ${esc(p.cliente)}. Ya figura en el panel del dueño como “link enviado”.</p><p class="small muted">Cotizado en ${mmss(p.armado)} min.</p><div class="row"><a class="btn primary" href="${waLink(p.tel,msgPedido(p))}" target="_blank" rel="noopener">Abrir WhatsApp con el mensaje</a><button class="btn" data-act="preview" data-id="${p.id}">Ver cómo lo recibe el cliente</button></div><pre class="msg">${esc(msgPedido(p))}</pre><div class="row"><button class="btn sm" data-act="copy">Copiar mensaje</button><button class="btn sm" data-act="newA">Armar otro presupuesto</button></div></div></div>`;}
+  const tot=st.lines.reduce((s,l)=>s+lineTotal(l),0);
+  return `<div class="card"><div class="cardhead"><h2>Presupuesto para el cliente</h2><span class="timer" id="a-timer">${timerTxt()}</span></div>
+  <div class="fields"><label class="f" for="a-cli">Cliente<input class="in" id="a-cli" data-a="cliente" value="${esc(st.cliente)}"></label><label class="f" for="a-tel">WhatsApp<input class="in" id="a-tel" data-a="tel" inputmode="tel" value="${esc(st.tel)}"></label></div>
+  ${st.lines.length?`<ul class="lines">${st.lines.map((l,i)=>`<li class="line"><div><span class="pname">${l.q>1?l.q+' × ':''}${esc(l.name)}</span><span class="ppres">${esc(l.detail)} · <button class="x" data-act="rmA" data-i="${i}">Quitar</button></span></div><span></span><span class="num"><b>${fmt(lineTotal(l))}</b></span></li>`).join('')}</ul>`:`<p class="empty">Agregá trabajos desde la izquierda.</p>`}
+  <div class="tot"><span>Total</span><span>${fmt(tot)}</span></div>
+  <button class="btn primary big" data-act="sendA" ${st.lines.length?'':'disabled'}>Generar link de pago y mandar por WhatsApp</button></div>`;
+}
+function viewA(){
+  const sub=S.A.sub==='cotizar'?'cotizar':'pliego';
+  const tabsA=`<div class="subtabs" role="tablist" aria-label="Qué querés hacer">
+   <button type="button" class="subtab" role="tab" aria-selected="${sub==='pliego'}" data-act="subA" data-v="pliego"><b>Armar pliego para imprimir</b><small>Imágenes del cliente → PDF a la impresora</small></button>
+   <button type="button" class="subtab" role="tab" aria-selected="${sub==='cotizar'}" data-act="subA" data-v="cotizar"><b>Cotizar por medida</b><small>Lonas, ploteos, tarjetas, folletos</small></button></div>`;
+  if(sub==='pliego')return `${intro('A')}${tabsA}${plBody('P')}`;
+  return `${intro('A')}${tabsA}<div class="grid"><div class="card"><h2>Agregar un trabajo</h2>
+  <label class="f" for="a-prod">Producto<select class="in" id="a-prod" data-a="prod">${prodOptions()}</select></label>
+  <div class="fields" id="a-fields">${prodFieldsHTML()}</div>
+  <button class="btn primary" data-act="addA">Agregar al presupuesto</button>
+  <p class="hook">Si el cliente trae imágenes, usá <b>Armar pliego</b>: la app las acomoda sola y te da el PDF para la impresora.</p></div>
+  <div id="a-cart">${cartAHTML()}</div></div>`;
+}
+
+/* B y C: armado de plancha, con el mismo recorrido que la sección de vinilos de Sebrox */
+const G=(n,list)=>({n,list:list.map(([a,w,h])=>({n:a,w,h}))});
+const PRESETS={
+ pl:[G('Tarjetas',[['Tarjeta personal',9,5],['Tarjeta europea',8.5,5.5],['Tarjeta cuadrada',6.5,6.5],['Tarjeta doble (abierta)',9,10],['Señalador',5,15],['Etiqueta colgante',5,9],['Credencial',8.5,5.4],['Turnero',7,4]]),
+     G('Stickers y etiquetas',[['Redondo 3 cm',3,3],['Redondo 4 cm',4,4],['Redondo 5 cm',5,5],['Redondo 6 cm',6,6],['Redondo 8 cm',8,8],['Redondo 10 cm',10,10],['Etiqueta 5 × 3',5,3],['Etiqueta 7 × 4',7,4],['Etiqueta 10 × 5',10,5],['Etiqueta 10 × 7',10,7],['Frasco 12 × 6',12,6]]),
+     G('Folletos y papelería',[['A6',10.5,14.8],['A5',14.8,21],['DL (tríptico cerrado)',9.9,21],['A4',21,29.7],['Carta',21.6,27.9],['Oficio',21.6,35.6],['Menú 1/3 A4',9.9,21],['Hoja membretada A4',21,29.7]]),
+     G('Postales e invitaciones',[['Postal 10 × 15',10,15],['Invitación 13 × 18',13,18],['Invitación 15 × 15',15,15],['Tarjetón 12 × 17',12,17],['Diploma A4',29.7,21]]),
+     G('Fotos y láminas',[['Foto 9 × 13',9,13],['Foto 10 × 15',10,15],['Foto 13 × 18',13,18],['Foto 15 × 21',15,21],['Foto 20 × 25',20,25],['Foto 20 × 30',20,30],['Lámina A3',29.7,42]])],
+ stk:[G('Stickers',[['Redondo 3 cm',3,3],['Redondo 5 cm',5,5],['Redondo 7 cm',7,7],['Redondo 10 cm',10,10],['Cuadrado 5 cm',5,5],['Cuadrado 7 cm',7,7],['Rectangular 8 × 5',8,5],['Rectangular 10 × 6',10,6],['Grande 15 × 15',15,15],['Grande 20 × 20',20,20]]),
+      G('Etiquetas',[['Etiqueta 5 × 3',5,3],['Etiqueta 7 × 4',7,4],['Etiqueta 10 × 5',10,5],['Frasco 12 × 6',12,6]])],
+ lona:[G('Banners y carteles',[['Cartel 60 × 40',60,40],['Cartel 100 × 50',100,50],['Cartel 100 × 70',100,70],['Banner 150 × 80',150,80],['Banner 150 × 100',150,100],['Frente 200 × 100',200,100],['Frente 300 × 100',300,100],['Frente 300 × 150',300,150]]),
+       G('Roll-up y pasacalles',[['Roll-up 85 × 200',85,200],['Roll-up 100 × 200',100,200],['Pasacalle 300 × 70',300,70],['Pasacalle 500 × 90',500,90]])],
+ vin:[G('Calcos y ploteos',[['10 × 10',10,10],['15 × 15',15,15],['20 × 20',20,20],['20 × 25',20,25],['30 × 30',30,30],['30 × 50',30,50],['40 × 40',40,40],['40 × 70',40,70],['50 × 50',50,50],['60 × 90',60,90],['100 × 100',100,100]]),
+      G('Vidrieras y puertas',[['Horario 30 × 40',30,40],['Puerta 80 × 200',80,200],['Vidriera 100 × 150',100,150],['Vidriera 120 × 180',120,180],['Franja 100 × 20',100,20]]),
+      G('Vehículos',[['Puerta de auto 50 × 30',50,30],['Luneta 120 × 50',120,50],['Lateral utilitario 200 × 80',200,80]]),
+      G('Afiches',[['A3 29,7 × 42',29.7,42],['A2 42 × 59,4',42,59.4],['A1 59,4 × 84,1',59.4,84.1],['A0 84,1 × 118,9',84.1,118.9]])],
+ foto:[G('Fotos y cuadros',[['20 × 30',20,30],['30 × 40',30,40],['30 × 45',30,45],['40 × 50',40,50],['40 × 60',40,60],['50 × 70',50,70],['60 × 90',60,90],['70 × 100',70,100]]),
+       G('Afiches',[['A3 29,7 × 42',29.7,42],['A2 42 × 59,4',42,59.4],['A1 59,4 × 84,1',59.4,84.1],['A0 84,1 × 118,9',84.1,118.9]])]
+};
+const presetKey=id=>{const m=matBy(id);if(m&&m.type==='pliego')return 'pl';if(['stk','iman'].includes(id))return 'stk';if(['lona','blackout','mesh','back','blueback'].includes(id))return 'lona';if(['canvas','foto','obra'].includes(id))return 'foto';return 'vin';};
+const groupsFor=id=>PRESETS[presetKey(id)];
+const presetsFor=id=>{const gs=groupsFor(id);return gs.flatMap(g=>g.list);};
+function curGroup(st){const gs=groupsFor(st.mat);return gs[Math.min(st.pg||0,gs.length-1)];}
+const CALS={
+ normal:{n:'Liviano',d:'JPG · hasta 300 ppp. Ideal para mandar por WhatsApp',max:300,enc:'jpg',q:0.92},
+ sinperdida:{n:'Sin pérdida',d:'Hasta 300 ppp, sin compresión: textos y logos perfectos. Para la impresora',max:300,enc:'flate'},
+ ppp600:{n:'Alta definición',d:'Hasta 600 ppp, para piezas chicas vistas de cerca. El más pesado',max:600,enc:'jpg',q:1}
+};
+const calOf=c=>CALS[c]||CALS.normal;
+const MAX_PX_FLATE=4000000;
+async function deflateBytes(u8){const cs=new CompressionStream('deflate');const w=cs.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(cs.readable).arrayBuffer());}
+const MAX_PX=16000000;
+function factorOf(mode){return mode==='C'?1-GREMIO:1;}
+const plural=(n,a,b)=>n===1?a:b;
+function drawAjustado(ctx,img,W,H,ajuste){
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,rImg=iw/ih,rDst=W/H;
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  if(ajuste==='recortar'){let sw,sh;if(rImg>rDst){sh=ih;sw=ih*rDst;}else{sw=iw;sh=iw/rDst;}ctx.drawImage(img,(iw-sw)/2,(ih-sh)/2,sw,sh,0,0,W,H);}
+  else{let dw,dh;if(rImg>rDst){dw=W;dh=W/rImg;}else{dh=H;dw=H*rImg;}ctx.drawImage(img,0,0,iw,ih,(W-dw)/2,(H-dh)/2,dw,dh);}
+}
+function calidadPPP(img,wcm,hcm,ajuste){
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,rImg=iw/ih,rDst=wcm/hcm;
+  if(ajuste==='recortar'){const pxA=rImg>rDst?ih*rDst:iw;return pxA/(wcm/2.54);}
+  const anchoCm=rImg>rDst?wcm:hcm*rImg;return iw/(anchoCm/2.54);
+}
+function pppOf(it){return it.img&&it.img.complete&&(it.img.naturalWidth||0)>0?calidadPPP(it.img,it.wmm/10,it.hmm/10,it.ajuste):300;}
+function calPill(p){return p>=250?`<span class="pill ok">Calidad excelente</span>`:p>=150?`<span class="pill warn">Calidad buena</span>`:`<span class="pill act">Puede verse pixelada</span>`;}
+function calMsg(p){return p>=250?['ok','Calidad excelente para esta medida: se imprime nítida.']:p>=150?['media','Calidad buena para esta medida.']:['baja','La imagen es chica para esta medida y puede verse pixelada. Elegí una medida más chica u otra imagen.'];}
+function thumbOf(img){const c=document.createElement('canvas');c.width=c.height=88;drawAjustado(c.getContext('2d'),img,88,88,'recortar');return c.toDataURL('image/jpeg',0.8);}
+const nombreLindo=a=>{const s=a.replace(/\.[^.]+$/,'').replace(/[-_ ]*\d{3,5}x\d{2,5}$/i,'').replace(/[-_]+/g,' ').trim();return s.charAt(0).toUpperCase()+s.slice(1);};
+
+function matsHTML(mode){
+  const st=S[mode],m=matBy(st.mat),fa=factorOf(mode),g=mode==='C'?' gremio':'',pl=m.type==='pliego';
+  const list=pl?SHEETMATS:MATS.filter(x=>x.id!=='corte');
+  return `<div class="opts2"><button type="button" class="opt" aria-pressed="${!pl}" data-act="mtab" data-mode="${mode}" data-v="rollo"><b>Gran formato</b><small>En rollo: vinilos, lonas, fotos (${MATS.length-1} materiales)</small></button><button type="button" class="opt" aria-pressed="${pl}" data-act="mtab" data-mode="${mode}" data-v="pliego"><b>Impresión digital</b><small>En pliego: papeles, cartulinas, autoadhesivos (${SHEETMATS.length})</small></button></div>
+  <div class="chips" style="margin-top:10px">${list.map(x=>`<button type="button" class="chip" aria-pressed="${st.mat===x.id}" data-act="mat" data-mode="${mode}" data-v="${x.id}">${esc(x.name)}</button>`).join('')}</div>
+  <p class="matinfo small"><b>${esc(m.name)}</b> · ${esc(m.hint)} · ${pl?`${fmt(r100(m.pl*fa))} el pliego SRA3${g}`:`${fmt(m.m2*fa)}/m²${g}`}</p>`;
+}
+function fmtHTML(mode){
+  const st=S[mode],m=matBy(st.mat);
+  if(m.type==='rollo'){const W=fmtOf(st).W;return `<span class="flabel">Ancho del rollo</span><div class="chips">${rollsOf(m).map(r=>`<button type="button" class="chip" aria-pressed="${W===r}" data-act="roll" data-mode="${mode}" data-v="${r}">${fN(r/10)} cm</button>`).join('')}</div><p class="small muted" style="margin-top:6px">Se arma a lo largo del rollo. Si pasa de 4,8 m, se parte en tramos.</p>`;}
+  return `<span class="flabel">Medida del pliego</span><div class="chips">${SIZES.map(z=>`<button type="button" class="chip" aria-pressed="${st.size===z.id}" data-act="size" data-mode="${mode}" data-v="${z.id}">${esc(z.n)}${z.w?`<small>${fN(z.w/10)} × ${fN(z.h/10)}</small>`:''}</button>`).join('')}</div>
+  ${st.size==='custom'?`<div class="fields" style="margin-top:8px"><label class="f" for="cw-${mode}">Ancho del pliego (cm)<input class="in" id="cw-${mode}" data-fmt="cw" data-mode="${mode}" inputmode="decimal" value="${esc(st.cw)}"></label><label class="f" for="ch-${mode}">Alto del pliego (cm)<input class="in" id="ch-${mode}" data-fmt="ch" data-mode="${mode}" inputmode="decimal" value="${esc(st.ch)}"></label></div>`:''}
+  <p class="small muted" style="margin-top:6px">Si no entra todo en un pliego, la app agrega los que hagan falta.</p>`;
+}
+function termsHTML(mode){
+  const st=S[mode],m=matBy(st.mat),ts=termsFor(m),fa=factorOf(mode);if(!ts.length)return '';
+  return `<span class="flabel">Terminaciones</span><div class="chips">${ts.map(t=>`<button type="button" class="chip" aria-pressed="${(st.terms||[]).includes(t.id)}" data-act="term" data-mode="${mode}" data-v="${t.id}">${esc(t.n)}<small>+${fmt(r100(t.p*fa)||t.p*fa)} ${UNITTXT[t.u]}</small></button>`).join('')}</div>`;
+}
+function card1HTML(mode){return `<h2><span class="n">1</span>Material y medida</h2>${matsHTML(mode)}<div style="margin-top:12px">${fmtHTML(mode)}</div><div style="margin-top:12px">${termsHTML(mode)}</div>`;}
+function rerenderC1(mode){const c=$('c1-'+mode);if(c)c.innerHTML=card1HTML(mode);const gp=$('gap-'+mode);if(gp)gp.innerHTML=gapHTML(mode);if(S[mode].sel){const ed=$('ed-'+mode);if(ed)ed.innerHTML=editorHTML(mode);}updateEditor(mode);refreshPl(mode);}
+function galleryHTML(mode){
+  return `<div class="cardhead"><h2><span class="n">2</span>Elegí la imagen</h2><span class="small muted">o subí la tuya</span></div>
+  <div class="vgrid" data-drop="${mode}">
+   <div class="vtile vupload"><span class="vu-ico" aria-hidden="true">+</span><b>${mode==='P'?'Subir las imágenes del cliente':'Subir mi imagen'}</b><small>JPG o PNG · podés elegir varias juntas</small><input type="file" accept="image/png,image/jpeg" multiple aria-label="Subir imágenes" data-upload="${mode}"></div>
+   ${GALLERY.map((g,i)=>`<button type="button" class="vtile" data-act="pick" data-mode="${mode}" data-i="${i}"><img src="${g.thumb||g.src}" alt="" loading="lazy"><span>${esc(g.name)}</span></button>`).join('')}
+  </div>
+  <p class="small muted">${mode==='P'?'Si subís varias juntas, entran todas con una medida inicial y después la cambiás en la lista, sin abrir una por una.':'Son diseños de ejemplo. En la versión real, la gráfica sube su propio catálogo y el cliente puede usar esos o subir los suyos.'}</p>`;
+}
+function presetsHTML(mode){
+  const st=S[mode],gs=groupsFor(st.mat),gi=Math.min(st.pg||0,gs.length-1);
+  return `${gs.length>1?`<div class="chips seg">${gs.map((g,i)=>`<button type="button" class="chip" aria-pressed="${i===gi}" data-act="pgrp" data-mode="${mode}" data-i="${i}">${esc(g.n)}</button>`).join('')}</div>`:''}
+  <div class="chips">${gs[gi].list.map(p=>{const w=st.giro?p.h:p.w,h=st.giro?p.w:p.h;return `<button type="button" class="chip" aria-pressed="${num(st.mw)===w&&num(st.mh)===h}" data-act="preset" data-mode="${mode}" data-w="${w}" data-h="${h}">${esc(p.n)}<small>${fN(w)} × ${fN(h)}</small></button>`;}).join('')}</div>`;
+}
+function editorHTML(mode){
+  const st=S[mode];
+  return `<div class="cardhead"><h2><span class="n">2</span>Medida y ajuste</h2><button type="button" class="btn sm" data-act="back" data-mode="${mode}">← Elegir otra imagen</button></div>
+  <div class="vprev"><canvas id="prev-${mode}" width="200" height="200" role="img" aria-label="Vista previa de ${esc(st.sel.name)}"></canvas><span class="small" style="overflow-wrap:anywhere">${esc(st.sel.name)}</span></div>
+  <div><span class="flabel">Medidas comunes</span><div id="presets-${mode}" class="stack" style="gap:8px">${presetsHTML(mode)}</div><p class="small muted" style="margin:6px 0 0">O escribí la medida que quieras:</p>
+   <div class="fields" style="margin-top:8px"><label class="f" for="mw-${mode}">Ancho (cm)<input class="in" id="mw-${mode}" data-ed="mw" data-mode="${mode}" inputmode="decimal" value="${esc(st.mw)}"></label><label class="f" for="mh-${mode}">Alto (cm)<input class="in" id="mh-${mode}" data-ed="mh" data-mode="${mode}" inputmode="decimal" value="${esc(st.mh)}"></label></div>
+   <button type="button" class="btn sm" style="margin-top:8px" data-act="girar" data-mode="${mode}">↻ Girar (horizontal / vertical)</button></div>
+  <div><span class="flabel">Ajuste</span><div class="opts2"><button type="button" class="opt" aria-pressed="${st.ajuste==='recortar'}" data-act="ajuste" data-mode="${mode}" data-v="recortar"><b>Llenar</b><small>Recorta lo que sobra</small></button><button type="button" class="opt" aria-pressed="${st.ajuste==='entera'}" data-act="ajuste" data-mode="${mode}" data-v="entera"><b>Entera</b><small>Con márgenes blancos</small></button></div></div>
+  <p class="calmsg" id="cal-${mode}"></p>
+  <div><label class="flabel" for="cant-${mode}">Cantidad de copias</label><div class="row" style="flex-wrap:nowrap"><input class="in" id="cant-${mode}" data-ed="cant" data-mode="${mode}" inputmode="numeric" value="${esc(st.cant)}" style="text-align:center"><button type="button" class="btn" data-act="fill1m" data-mode="${mode}" style="white-space:nowrap">${matBy(st.mat).type==='pliego'?'Completar el pliego':'Completar el metro'}</button></div><p class="small muted" id="max-${mode}" style="margin-top:4px"></p></div>
+  <button type="button" class="btn primary big" data-act="addPl" data-mode="${mode}">Agregar ${mode==='P'?'al pliego':'a la plancha'}</button>`;
+}
+function maxCopias(st,wmm,hmm){
+  const f=fmtOf(st);if(!wmm||!hmm||!fitsFmt(f,wmm,hmm,st.rotate))return {n:0,meta:1,f};
+  const lenOf=b=>b.reduce((s,x)=>s+x.used,0);
+  const binsFor=items=>{const n=items.reduce((t,i)=>t+i.qty,0);if(n<=150){const r=layoutRaw(f,items,st.rotate);return r.tooBig.length?null:r.bins;}return fastBins(f,items,st.rotate);};
+  const b0=binsFor(st.items)||[];
+  let meta=f.type==='rollo'?Math.max(1000,Math.ceil(lenOf(b0)/1000)*1000):Math.max(1,b0.length);
+  const probe={id:'probe',wmm,hmm,qty:0};
+  const fits=n=>{probe.qty=n;const b=binsFor(st.items.concat([probe]));if(!b)return false;return f.type==='rollo'?lenOf(b)<=meta:b.length<=meta;};
+  const cap=()=>Math.floor((f.type==='rollo'?f.W*meta:f.W*f.H*meta)/((wmm+f.gap)*(hmm+f.gap)))+2;
+  const calc=()=>{if(!fits(1))return 0;let lo=1,hi=cap();while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(fits(mid))lo=mid;else hi=mid-1;}return lo;};
+  let n=calc();if(n===0){meta+=f.type==='rollo'?1000:1;n=calc();}
+  return {n,meta,f};
+}
+function updateEditor(mode){
+  const st=S[mode];if(!st.sel)return;
+  const w=num(st.mw),h=num(st.mh),cv=$('prev-'+mode);
+  if(cv&&w&&h){const maxL=200,e=maxL/Math.max(w,h),dpr=window.devicePixelRatio||1;cv.style.width=Math.round(w*e)+'px';cv.style.height=Math.round(h*e)+'px';cv.width=Math.max(1,Math.round(w*e*dpr));cv.height=Math.max(1,Math.round(h*e*dpr));drawAjustado(cv.getContext('2d'),st.sel.img,cv.width,cv.height,st.ajuste);}
+  const pr=$('presets-'+mode);if(pr)pr.innerHTML=presetsHTML(mode);
+  const cm=$('cal-'+mode);if(cm){if(w&&h){const [cls,t]=calMsg(calidadPPP(st.sel.img,w,h,st.ajuste));cm.className='calmsg '+cls;cm.textContent=t;}else{cm.className='calmsg';cm.textContent='Poné el ancho y el alto.';}}
+  const mx=$('max-'+mode);if(mx){const f=fmtOf(st);
+    if(w&&h&&!fitsFmt(f,w*10,h*10,st.rotate))mx.textContent=`No entra en ${f.type==='rollo'?'el rollo de '+fN(f.W/10)+' cm':'el pliego '+f.short}. Achicá la medida.`;
+    else if(w&&h){const m=maxCopias(st,w*10,h*10);mx.textContent=m.n?(f.type==='rollo'?`Para completar ${fN(m.meta/1000)} m de rollo entran hasta ${m.n} copias de esta medida.`:`Para completar ${m.meta} ${plural(m.meta,'pliego','pliegos')} ${f.short} entran hasta ${m.n} copias de esta medida.`):'';}else mx.textContent='';}
+}
+function openEditor(mode,name,img){
+  const st=S[mode];st.sel={name,img};const p=curGroup(st).list[0];
+  const horiz=(img.naturalWidth||1)>(img.naturalHeight||1);st.giro=horiz!==(p.w>p.h)&&p.w!==p.h;
+  st.mw=String(st.giro?p.h:p.w);st.mh=String(st.giro?p.w:p.h);st.ajuste='recortar';st.cant='1';
+  $('ed-'+mode).innerHTML=editorHTML(mode);updateEditor(mode);
+  $('ed-'+mode).scrollIntoView({behavior:'smooth',block:'start'});
+}
+function backGallery(mode){S[mode].sel=null;$('ed-'+mode).innerHTML=galleryHTML(mode);}
+function addToPlancha(mode){
+  const st=S[mode];if(!st.sel)return;const w=num(st.mw),h=num(st.mh),q=Math.round(num(st.cant));
+  if(!w||!h){toast('Poné el ancho y el alto.');return;}
+  if(!q){toast('Poné cuántas copias querés.');return;}
+  const f=fmtOf(st);if(!fitsFmt(f,w*10,h*10,st.rotate)){toast(`No entra en ${f.type==='rollo'?'el rollo de '+fN(f.W/10)+' cm':'el pliego '+f.short}. Achicá la medida.`);return;}
+  if(mode==='P'&&!st.start)st.start=Date.now();
+  st.items.push({id:'i'+(itemSeq++),name:st.sel.name,src:st.sel.img.src,img:st.sel.img,thumb:thumbOf(st.sel.img),wmm:Math.round(w*10),hmm:Math.round(h*10),qty:q,ajuste:st.ajuste});
+  S[mode].sent=null;backGallery(mode);$('list-'+mode).innerHTML=listHTML(mode);refreshPl(mode);
+  toast(`${q} ${q===1?'copia agregada':'copias agregadas'} ${mode==='P'?'al pliego':'a la plancha'}`);
+}
+function listHTML(mode){
+  const st=S[mode];if(!st.items.length)return `<p class="empty">${mode==='P'?'El pliego está vacío. Subí las imágenes del cliente o elegí una de la galería.':'Tu plancha está vacía. Elegí una imagen y agregala.'}</p>`;
+  const inp=(it,k,v,lab)=>`<label class="f">${lab}<input class="in" data-it="${it.id}" data-k="${k}" data-mode="${mode}" inputmode="decimal" value="${v}" aria-label="${lab} de ${esc(it.name)}"></label>`;
+  return `<ul class="pitems">${st.items.map(it=>`<li class="pitem"><img src="${it.thumb}" alt=""><div style="min-width:0"><span class="pname" style="overflow-wrap:anywhere">${esc(it.name)}</span><span class="ppres">${it.ajuste==='recortar'?'Llenar':'Entera'} · <span id="pc-${it.id}">${calPill(pppOf(it))}</span></span>
+   <div class="pdims">${inp(it,'w',fN(it.wmm/10,1),'Ancho cm')}${inp(it,'h',fN(it.hmm/10,1),'Alto cm')}${inp(it,'qty',it.qty,'Copias')}</div></div>
+   <button type="button" class="x" data-act="rmItem" data-mode="${mode}" data-id="${it.id}" aria-label="Quitar ${esc(it.name)}">Quitar</button></li>`).join('')}</ul><div class="row"><button type="button" class="btn sm" data-act="vaciar" data-mode="${mode}">Vaciar ${mode==='P'?'pliego':'plancha'}</button></div>`;
+}
+function calHTML(cur,attrs,label){return `<div><span class="flabel">${label}</span><div class="opts3c">${Object.entries(CALS).map(([k,c])=>`<button type="button" class="opt" aria-pressed="${(CALS[cur]?cur:'normal')===k}" ${attrs} data-v="${k}"><b>${c.n}</b><small>${c.d}</small></button>`).join('')}</div></div>`;}
+function summaryHTML(mode){
+  const st=S[mode],mat=matBy(st.mat),f=fmtOf(st),L=layout(f,st.items,st.rotate),q=quote(L,mat,factorOf(mode),st.terms),roll=f.type==='rollo',P=mode==='P';
+  const has=L.count>0;
+  let extra='';
+  if(mode==='C'){const mk=num(st.markup);const cli=r100(q.price/(1-GREMIO)*(1+mk/100));const msg=`Hola ${st.cliente||''}, te paso el presupuesto de tus ${L.count} calcos (${mat.name}): ${fmt(cli)}.`;extra=`<div class="card" style="padding:12px;background:var(--surface-2);border:0"><h3 style="font-size:15px">Presupuesto para tu cliente</h3><div class="fields"><label class="f" for="c-cli">Cliente<input class="in" id="c-cli" data-c="cliente" value="${esc(st.cliente)}"></label><label class="f" for="c-mk">Tu ganancia sobre lista (%)<input class="in" id="c-mk" data-c="markup" inputmode="decimal" value="${esc(st.markup)}"></label></div><div class="sumrow"><span>Precio para tu cliente</span><b class="num">${fmt(cli)}</b></div><div class="sumrow muted"><span>Tu costo con gremio</span><span class="num">${fmt(q.price)}</span></div><p class="hook">Tu ganancia en este trabajo: <b>${fmt(cli-q.price)}</b>.</p><a class="btn sm" href="${waLink('',msg)}" target="_blank" rel="noopener">Mandarle el presupuesto por WhatsApp</a></div>`;}
+  const warn=L.tooBig.length?`<p class="notice">No entra en ${roll?'el ancho del rollo ('+fN(f.W/10)+' cm)':'el pliego '+f.short}: ${L.tooBig.map(i=>esc(i.name)).join(', ')}. Achicá la medida.</p>`:'';
+  const low=st.items.filter(i=>pppOf(i)<150);
+  const lowTxt=low.length?`<p class="notice">Hay ${low.length} imagen${low.length>1?'es':''} con resolución baja para su medida: puede salir pixelada.</p>`:'';
+  let sent='';
+  if(mode==='B'&&S.B.sent){const p=S.pedidos.find(x=>x.id===S.B.sent);if(p){const txt=`Hola, les mando mi plancha (#${pad(p.id)}): ${p.lines[0].name}, ${p.lines[0].detail}. Total ${fmt(pedTotal(p))}. A nombre de ${p.cliente}.`;sent=`<div class="done"><b>Plancha #${pad(p.id)} enviada a la gráfica</b><p class="small">Le aparece al dueño en su panel como “a confirmar”, con el PDF listo para imprimir.</p><a class="btn primary" href="${waLink(STORE.wa,txt)}" target="_blank" rel="noopener">Avisar por WhatsApp a la gráfica</a></div>`;}}
+  if(P&&st.sent){const p=S.pedidos.find(x=>x.id===st.sent);if(p){const pagado=p.estado==='pagado'||p.estado==='preparando';
+    const how=st.shared==='share'?'<p class="small">Se abrió el menú para compartir: elegí WhatsApp y el chat del cliente. Va el PDF con el mensaje y el link de pago.</p>':st.shared==='dl'?'<p class="small"><b>1.</b> El PDF de la prueba ya se bajó. <b>2.</b> Tocá el botón de abajo: se abre el chat con el mensaje y el link de pago. <b>3.</b> Adjuntá el PDF (clip ➜ Documento) y mandalo.</p>':'';
+    sent=`<div class="done"><b>Pedido #${pad(p.id)} ${pagado?'pagado · a imprimir':'enviado · esperando el pago'}</b>${how}<p class="small">Ya figura en el panel del dueño con el PDF del pliego.${p.armado?` Armado en ${mmss(p.armado)} min.`:''}</p>${pagado?'':`<a class="btn wa" href="${waLink(p.tel,msgProof(p))}" target="_blank" rel="noopener">Abrir el chat con ${esc(p.cliente)} en WhatsApp</a><button type="button" class="btn sm" data-act="preview" data-id="${p.id}">Ver cómo le llega el link al cliente</button>`}<button type="button" class="btn sm" data-act="newP">Armar otro pliego</button></div>`;}}
+  const stats=roll?`<div class="stat"><span>Largo de rollo</span><b>${fN(q.ml,2)} m</b></div><div class="stat"><span>Ancho de rollo</span><b>${fN(f.W/1000,2)} m</b></div>`
+    :`<div class="stat"><span>Pliegos</span><b>${q.n}</b></div><div class="stat"><span>Medida</span><b>${esc(f.short)}</b></div>`;
+  const how=roll?(CFG.cobro==='ml'?`Se cobra el metro lineal usado: ${fN(q.ml,2)} m × ${fN(f.W/1000,2)} m de ancho × ${fmt(mat.m2)}/m²${mode==='C'?' con descuento de gremio':''}. Mínimo ${fN(CFG.minMl,2)} m.`:'Se cobra solo la superficie impresa.')
+    :`${q.n} ${plural(q.n,'pliego','pliegos')} ${esc(f.short)} × ${fmt(q.sp)}${mode==='C'?' con descuento de gremio':''}.`;
+  const exHTML=q.extras.length?`<div class="sumrow small"><span>Impresión</span><span class="num">${fmt(q.base)}</span></div>${q.extras.map(e=>`<div class="sumrow small"><span>${esc(e.n)}${e.u==='ojal'?` (${e.cant} ojales)`:e.u==='pieza'?` (${e.cant} piezas)`:''}</span><span class="num">${fmt(e.tot)}</span></div>`).join('')}`:'';
+  const cal=calHTML(st.cal,`data-act="calpdf" data-mode="${mode}"`,P?'Calidad del PDF para la impresora':'Calidad del PDF');
+  let actions;
+  if(P)actions=`<div class="fields"><label class="f" for="p-cli">Cliente<input class="in" id="p-cli" data-p="cliente" value="${esc(st.cliente)}" placeholder="Nombre o comercio"></label><label class="f" for="p-tel">WhatsApp<input class="in" id="p-tel" data-p="tel" inputmode="tel" value="${esc(st.tel)}" placeholder="11 5555 0000"></label></div>
+   <button type="button" class="btn primary big" data-act="pdf" data-mode="P" ${has?'':'disabled'}>Mandar a la impresora (PDF a tamaño real)</button>
+   <button type="button" class="btn wa big" data-act="waProof" ${has?'':'disabled'}>Mandar por WhatsApp: prueba en PDF + link de pago</button>
+   <p class="small muted" style="margin:-4px 0 0">El cliente revisa la prueba antes de pagar. Cuando paga, el pedido pasa solo a “a imprimir”.</p>
+   <button type="button" class="btn" data-act="savePl" data-v="local" ${has?'':'disabled'}>Ya pagó en el local: guardar y pasar a imprimir</button>`;
+  else actions=`${mode==='B'?`<div class="fields"><label class="f" for="b-cli2">Tu nombre<input class="in" id="b-cli2" data-b="cliente" value="${esc(S.B.cliente)}" placeholder="Nombre y apellido"></label><label class="f" for="b-tel2">Tu WhatsApp<input class="in" id="b-tel2" data-b="tel" inputmode="tel" value="${esc(S.B.tel)}" placeholder="11 5555 0000"></label></div>`:''}
+   <button type="button" class="btn" data-act="pdf" data-mode="${mode}" ${has?'':'disabled'}>Descargar PDF listo para imprimir</button>
+   <button type="button" class="btn mp" data-act="payPl" data-mode="${mode}" ${has?'':'disabled'}>Pagar con Mercado Pago y mandar a la gráfica</button>
+   ${mode==='B'?`<button type="button" class="btn" data-act="waPl" ${has?'':'disabled'}>Mandarla por WhatsApp y pagar al retirar</button>`:''}`;
+  return `<div class="stats">${stats}
+   <div class="stat"><span>Imágenes</span><b>${L.count}</b></div>
+   <div class="stat"><span>Superficie impresa</span><b>${fN(q.m2d,2)} m²</b></div></div>
+   <div><div class="sumrow small"><span>Aprovechamiento ${roll?'del rollo':plural(q.n,'del pliego','de los pliegos')}</span><b>${pct(q.util)}</b></div><div class="meter" aria-hidden="true"><i style="width:${Math.min(100,q.util*100)}%"></i></div></div>
+   ${warn}${lowTxt}
+   ${exHTML}<div class="tot"><span>${mode==='C'?'Tu precio (gremio −15%)':'Total'}</span><span>${fmt(q.price)}</span></div>
+   <p class="small muted">${how}</p>
+   ${extra}${cal}${actions}${sent}
+   <p class="tip small">${P?'En la impresora va <b>al 100% / tamaño real</b>, sin ajustar a la página: cada página del PDF es un pliego o tramo.':'En la gráfica se imprime <b>al 100% / tamaño real</b>, sin ajustar a la página.'} ${f.gap?`Las imágenes llevan ${fN(f.gap)} mm de separación para poder recortarlas.`:'Las imágenes van pegadas, sin separación.'}</p>`;
+}
+function plBody(mode){
+  const st=S[mode],P=mode==='P';
+  return `<div class="grid"><div class="stack">
+  <div class="card" id="c1-${mode}">${card1HTML(mode)}</div>
+  <div class="card" id="ed-${mode}">${st.sel?editorHTML(mode):galleryHTML(mode)}</div></div>
+  <div class="stack"><div class="card"><div class="cardhead"><h2><span class="n">3</span>${P?'El pliego':'Tu plancha'}</h2>${P?`<span class="timer" id="p-timer">${timerP()}</span>`:'<span class="small muted">Vista a escala</span>'}</div>
+   <div class="rollwrap"><canvas id="roll-${mode}" width="400" height="300" role="img" aria-label="Vista previa a escala"></canvas></div>
+   <p class="optline small" id="opt-${mode}"></p>
+   <div id="list-${mode}" class="stack" style="gap:8px">${listHTML(mode)}</div>
+   <div id="gap-${mode}">${gapHTML(mode)}</div>
+   <label class="chk" for="${mode}-rot"><input type="checkbox" id="${mode}-rot" data-rot="${mode}" ${st.rotate?'checked':''}><span>Girar imágenes cuando conviene<small>Aprovecha mejor el material. Desactivalo si alguna tiene un sentido fijo.</small></span></label>
+   <div id="sum-${mode}" class="stack" style="gap:10px">${summaryHTML(mode)}</div></div></div></div>`;
+}
+function gapHTML(mode){
+  const st=S[mode],m=matBy(st.mat),auto=st.gapMode!=='manual',g=gapOf(st);
+  const chip=(v,t)=>`<button type="button" class="chip" aria-pressed="${!auto&&g===v}" data-act="gap" data-mode="${mode}" data-v="${v}">${t}</button>`;
+  return `<span class="flabel">Espacio entre imágenes</span><div class="chips"><button type="button" class="chip" aria-pressed="${auto}" data-act="gap" data-mode="${mode}" data-v="auto">Automático<small>${fN(autoGap(m))} mm</small></button>${chip(0,'Sin espacio')}${[1,2,3,5,8,10,15,20].map(v=>chip(v,v+' mm')).join('')}</div>
+  <div class="row" style="margin-top:8px;align-items:center;flex-wrap:nowrap"><label class="f" for="gapin-${mode}" style="flex:0 0 150px">Otra medida (mm)<input class="in" id="gapin-${mode}" data-gap="${mode}" inputmode="decimal" value="${auto?'':esc(fN(g,1))}" placeholder="Ej: 4"></label>
+  <p class="small muted" id="gaptxt-${mode}" style="margin:0">${gapTxt(st)}</p></div>`;
+}
+function gapTxt(st){const m=matBy(st.mat),g=gapOf(st);
+  if(st.gapMode!=='manual')return `La app usa ${fN(g)} mm ${m.type==='pliego'?'en pliegos':LONAS.includes(m.id)?'en lonas, para dobladillo y ojales':'en rollo'}. Lo define el dueño en su panel.`;
+  return g===0?'Pegadas: para cortar a guillotina de un solo corte. Ideal si el diseño ya trae demasía.':`${fN(g)} mm entre cada imagen, fijado a mano.`;}
+function viewPl(mode){return intro(mode)+plBody(mode);}
+function timerP(){const st=S.P;return st.start&&st.items.length?'Armando: '+mmss((Date.now()-st.start)/1000):'Listo para empezar';}
+let optT={};
+function optStatus(mode){
+  const el=$('opt-'+mode);if(!el)return;const st=S[mode],f=fmtOf(st),L=layout(f,st.items,st.rotate);
+  el.innerHTML=!L.count?'':L.optimized?`<span class="okdot" aria-hidden="true"></span>Acomodado automáticamente para aprovechar el material. <button type="button" class="x" data-act="reacomodar" data-mode="${mode}">Buscar un acomodo mejor</button>`:'Acomodando…';
+}
+function scheduleOpt(mode){
+  clearTimeout(optT[mode]);
+  optT[mode]=setTimeout(()=>{const st=S[mode];if(!st.items.length)return;optimizeLayout(fmtOf(st),st.items,st.rotate);const s=$('sum-'+mode);if(s)s.innerHTML=summaryHTML(mode);drawRoll(mode);optStatus(mode);},350);
+}
+function refreshPl(mode){const s=$('sum-'+mode);if(s)s.innerHTML=summaryHTML(mode);drawRoll(mode);optStatus(mode);scheduleOpt(mode);}
+
+/* dibujo de la plancha */
+let drawPending=false;
+function scheduleDraw(){if(drawPending)return;drawPending=true;requestAnimationFrame(()=>{drawPending=false;const m=curMode();if(m){drawRoll(m);optStatus(m);scheduleOpt(m);}});}
+function curMode(){return S.view==='cliente'?'B':S.view==='revendedor'?'C':S.view==='vendedor'&&S.A.sub!=='cotizar'?'P':null;}
+function drawPiece(x,it,px,py,pw,ph,rot){
+  if(!it.img||!it.img.complete||!(it.img.naturalWidth>0)){x.fillStyle='#e9ebef';x.fillRect(px,py,pw,ph);return;}
+  x.save();if(rot){x.translate(px+pw,py);x.rotate(Math.PI/2);drawAjustado(x,it.img,ph,pw,it.ajuste);}else{x.translate(px,py);drawAjustado(x,it.img,pw,ph,it.ajuste);}x.restore();
+}
+function drawSheets(cv,L,maxW){
+  const f=L.fmt,roll=f.type==='rollo';
+  const sh=L.sheets.length?L.sheets:[{W:f.W,H:roll?Math.max(200,f.W*0.25):f.H,placed:[]}];
+  const n=sh.length,cols=!roll&&n>1?2:1,gap=14,lab=(n>1||!roll)?20:0;
+  const cellW=(maxW-(cols-1)*gap)/cols;
+  const scale=Math.min(cellW/f.W,roll?1.2:(cols===1?520:360)/f.H);
+  const rows=[];for(let i=0;i<n;i+=cols)rows.push(sh.slice(i,i+cols));
+  const W=Math.round(cols*f.W*scale+(cols-1)*gap),H=Math.round(rows.reduce((s,r)=>s+lab+Math.max(...r.map(x=>x.H))*scale+gap,0)-gap);
+  const dpr=window.devicePixelRatio||1;cv.width=Math.max(1,W*dpr);cv.height=Math.max(1,H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  let y=0,idx=0;
+  rows.forEach(r=>{let ox=0;r.forEach(sht=>{idx++;
+    if(lab){x.fillStyle='#4a505c';x.font='600 12px Figtree, system-ui, sans-serif';x.textBaseline='top';x.fillText(roll?`Tramo ${idx} de ${n} · ${fN(sht.H/1000,2)} m`:`Pliego ${idx} de ${n} · ${f.short}`,ox,y+2);}
+    const sy=y+lab,sw=sht.W*scale,shh=sht.H*scale;
+    x.fillStyle='rgba(0,0,0,.10)';x.fillRect(ox+1,sy+2,sw,shh);x.fillStyle='#fff';x.fillRect(ox,sy,sw,shh);
+    sht.placed.forEach(p=>{drawPiece(x,p.it,ox+p.x*scale,sy+p.y*scale,p.w*scale,p.h*scale,p.rot);x.strokeStyle='rgba(21,23,28,.25)';x.lineWidth=1;x.strokeRect(ox+p.x*scale+.5,sy+p.y*scale+.5,Math.max(0,p.w*scale-1),Math.max(0,p.h*scale-1));});
+    x.strokeStyle='rgba(0,115,158,.35)';x.setLineDash([4,4]);x.strokeRect(ox+f.margin*scale,sy+f.margin*scale,(sht.W-2*f.margin)*scale,Math.max(0,(sht.H-2*f.margin)*scale));x.setLineDash([]);
+    ox+=sw+gap;});
+    y+=lab+Math.max(...r.map(q=>q.H))*scale+gap;});
+}
+function drawRoll(mode){
+  const cv=$('roll-'+mode);if(!cv)return;
+  const st=S[mode],L=layout(fmtOf(st),st.items,st.rotate);
+  const maxW=Math.max(200,(cv.parentElement.clientWidth||400)-24);
+  drawSheets(cv,L,maxW);
+}
+
+/* PDF propio, sin librerías externas (el mismo método que la app Sebrox): una o más páginas a tamaño real */
+function dataURLaBytes(d){const b=atob(d.split(',')[1]);const o=new Uint8Array(b.length);for(let i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o;}
+function armarPDF(pages,imagenes){
+  const k=72/25.4,f=n=>(Math.round(n*1000)/1000).toString();
+  const partes=[],offsets=[];let largo=0;
+  const add=p=>{partes.push(p);largo+=p.length;};
+  const obj=(n,cuerpo)=>{offsets[n]=largo;add(`${n} 0 obj\n`);cuerpo.forEach(add);add('\nendobj\n');};
+  add('%PDF-1.4\n');
+  const nP=pages.length,firstPage=3,firstImg=3+2*nP;
+  obj(1,['<< /Type /Catalog /Pages 2 0 R >>']);
+  obj(2,[`<< /Type /Pages /Kids [${pages.map((_,i)=>`${firstPage+2*i} 0 R`).join(' ')}] /Count ${nP} >>`]);
+  const xobjs=imagenes.map((_,i)=>`/Im${i} ${firstImg+i} 0 R`).join(' ');
+  pages.forEach((pg,i)=>{
+    const cont=pg.col.map(c=>{const X=c.x*k,Y=(pg.H-c.y-c.h)*k,Wc=c.w*k,Hc=c.h*k;return c.rot?`q 0 ${f(-Hc)} ${f(Wc)} 0 ${f(X)} ${f(Y+Hc)} cm /Im${c.img} Do Q`:`q ${f(Wc)} 0 0 ${f(Hc)} ${f(X)} ${f(Y)} cm /Im${c.img} Do Q`;}).join('\n');
+    obj(firstPage+2*i,[`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(pg.W*k)} ${f(pg.H*k)}] /Resources << /XObject << ${xobjs} >> >> /Contents ${firstPage+2*i+1} 0 R >>`]);
+    obj(firstPage+2*i+1,[`<< /Length ${cont.length} >>\nstream\n`,cont,'\nendstream']);
+  });
+  imagenes.forEach((im,i)=>obj(firstImg+i,[`<< /Type /XObject /Subtype /Image /Width ${im.pw} /Height ${im.ph} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /${im.filter||'DCTDecode'} /Length ${im.bytes.length} >>\nstream\n`,im.bytes,'\nendstream']));
+  const total=firstImg+imagenes.length,xref=largo;
+  let t=`xref\n0 ${total}\n0000000000 65535 f \n`;for(let n=1;n<total;n++)t+=String(offsets[n]).padStart(10,'0')+' 00000 n \n';
+  add(t+`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(partes.map(p=>typeof p==='string'?new TextEncoder().encode(p):p),{type:'application/pdf'});
+}
+async function buildPdf(items,f,rotate,cal){
+  const L=layout(f,items,rotate);
+  const pages=L.sheets.map(sh=>({W:sh.W,H:sh.H,col:[]}));
+  const imagenes=[];const used=[...new Set(L.sheets.flatMap(sh=>sh.placed.map(p=>p.it)))];
+  for(const it of used){
+    const C=calOf(cal),flate=C.enc==='flate'&&typeof CompressionStream==='function';
+    const ppp=Math.max(100,Math.min(C.max,calidadPPP(it.img,it.wmm/10,it.hmm/10,it.ajuste)));
+    const pw=Math.max(1,Math.round(it.wmm/25.4*ppp)),ph=Math.max(1,Math.round(it.hmm/25.4*ppp));
+    const nFr=Math.ceil(pw*ph/(flate?MAX_PX_FLATE:MAX_PX)),altoFr=Math.ceil(ph/nFr),franjas=[];
+    for(let y0=0;y0<ph;y0+=altoFr){
+      const hs=Math.min(altoFr,ph-y0);const c=document.createElement('canvas');c.width=pw;c.height=hs;const cx=c.getContext('2d');
+      cx.translate(0,-y0);drawAjustado(cx,it.img,pw,ph,it.ajuste);cx.setTransform(1,0,0,1,0,0);
+      if(flate){const d=cx.getImageData(0,0,pw,hs).data,rgb=new Uint8Array(pw*hs*3);for(let i=0,j=0;i<d.length;i+=4){rgb[j++]=d[i];rgb[j++]=d[i+1];rgb[j++]=d[i+2];}
+        imagenes.push({bytes:await deflateBytes(rgb),pw,ph:hs,filter:'FlateDecode'});}
+      else imagenes.push({bytes:dataURLaBytes(c.toDataURL('image/jpeg',C.q||0.92)),pw,ph:hs});franjas.push({img:imagenes.length-1,y0,y1:y0+hs});
+      c.width=c.height=1;await new Promise(res=>setTimeout(res,0));
+    }
+    L.sheets.forEach((sh,si)=>sh.placed.filter(p=>p.it===it).forEach(p=>{const pg=pages[si];
+      franjas.forEach(fr=>{if(!p.rot)pg.col.push({img:fr.img,x:p.x,y:p.y+p.h*fr.y0/ph,w:p.w,h:p.h*(fr.y1-fr.y0)/ph,rot:false});
+        else pg.col.push({img:fr.img,x:p.x+p.w*(1-fr.y1/ph),y:p.y,w:p.w*(fr.y1-fr.y0)/ph,h:p.h,rot:true});});}));
+  }
+  return armarPDF(pages,imagenes);
+}
+const L_pages=(items,f,rot)=>{const n=layout(f,items,rot).sheets.length;return n+' '+(f.type==='rollo'?plural(n,'página','páginas'):plural(n,'pliego','pliegos'));};
+let dl=null;
+(async()=>{try{if(window.claude&&typeof window.claude.use==='function'){dl=await window.claude.use('downloads');}}catch(e){dl=null;}})();
+async function saveFile(name,blob){
+  if(dl){try{await dl.save({filename:name,data:blob});return 'ok';}catch(e){return e&&e.code==='declined'?'declined':'error';}}
+  try{const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);return 'ok';}catch(e){return 'error';}
+}
+async function doPdf(items,f,rotate,cal,fname,btn){
+  if(items.some(i=>!i.img||!i.img.complete)){toast('Esperá un segundo: todavía se están cargando las imágenes.');return;}
+  const old=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='Armando el PDF…';}
+  await new Promise(r=>setTimeout(r,30));
+  try{const blob=await buildPdf(items,f,rotate,cal);const res=await saveFile(fname,blob);
+    if(res==='ok')toast((typeof CompressionStream!=='function'&&cal==='sinperdida'?'Este navegador no permite «sin pérdida»: se usó JPG al 100%. ':'')+'PDF listo: '+fname+' ('+fN(blob.size/1048576,1)+' MB, '+L_pages(items,f,rotate)+')');else if(res==='declined')toast('Descarga cancelada.');else toast('No se pudo descargar en esta vista.');}
+  catch(e){toast('No se pudo armar el PDF. Probá con menos imágenes.');}
+  finally{if(btn){btn.disabled=false;btn.textContent=old;}}
+}
+async function waProof(btn){
+  const st=S.P;const pl=snapshotPlancha(st,1);if(!pl.count)return;
+  if(pl.items.some(i=>!i.img||!i.img.complete)){toast('Esperá un segundo: todavía se están cargando las imágenes.');return;}
+  let p=st.sent&&S.pedidos.find(x=>x.id===st.sent&&x.estado==='esperando');
+  if(!p){p=crearPedido('A',{cliente:st.cliente,tel:st.tel,lines:[planchaLine(pl,'Pliego')],plancha:pl,estado:'esperando',armado:st.start?(Date.now()-st.start)/1000:null});st.sent=p.id;tabs();}
+  const old=btn.textContent;btn.disabled=true;btn.textContent='Armando la prueba en PDF…';
+  try{
+    const blob=await buildPdf(pl.items,pl.fmt,pl.rotate,'normal');const name=`prueba-pedido-${pad(p.id)}.pdf`;
+    let shared=false;
+    try{const file=new File([blob],name,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msgProof(p)});shared=true;}}
+    catch(e){if(e&&e.name==='AbortError'){st.shared=null;btn.disabled=false;btn.textContent=old;refreshPl('P');return;}}
+    if(shared)st.shared='share';else{const r=await saveFile(name,blob);st.shared=r==='ok'?'dl':null;if(r!=='ok')toast('No se pudo bajar el PDF en esta vista.');}
+  }catch(e){toast('No se pudo armar el PDF.');}
+  refreshPl('P');const d=$('sum-P')&&$('sum-P').querySelector('.done');if(d)d.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function loadUploads(files,mode){
+  files=[...(files||[])].filter(f=>/image\/(png|jpeg)/.test(f.type));
+  if(!files.length){toast('Probá con imágenes JPG o PNG.');return;}
+  if(files.length===1){loadUpload(files[0],mode);return;}
+  const st=S[mode],f=fmtOf(st),p0=curGroup(st).list[0],base=Math.max(p0.w,p0.h)*10;
+  let left=files.length,ok=0;
+  files.forEach(file=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{
+      const r=(im.naturalWidth||1)/(im.naturalHeight||1);let w=r>=1?base:base*r,h=r>=1?base/r:base;
+      while(!fitsFmt(f,w,h,st.rotate)&&w>10){w*=0.9;h*=0.9;}
+      st.items.push({id:'i'+(itemSeq++),name:nombreLindo(file.name||'Imagen'),src:im.src,img:im,thumb:thumbOf(im),wmm:Math.round(w/5)*5,hmm:Math.round(h/5)*5,qty:1,ajuste:'recortar'});ok++;done();};
+      im.onerror=done;im.src=fr.result;};fr.onerror=done;fr.readAsDataURL(file);});
+  function done(){if(--left>0)return;if(mode==='P'&&!st.start)st.start=Date.now();st.sent=null;$('list-'+mode).innerHTML=listHTML(mode);refreshPl(mode);toast(`Se agregaron ${ok} imágenes. Cambiá la medida o las copias en la lista.`);}
+}
+function loadUpload(file,mode){
+  if(!file||!/image\/(png|jpeg)/.test(file.type)){toast('Probá con una imagen JPG o PNG.');return;}
+  const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>openEditor(mode,nombreLindo(file.name||'Mi imagen'),im);im.onerror=()=>toast('No se pudo abrir esa imagen.');im.src=fr.result;};fr.readAsDataURL(file);
+}
+
+/* dueño */
+function viewO(){
+  const ps=S.pedidos,pl=ps.filter(p=>p.plancha),m2=pl.reduce((s,p)=>s+p.plancha.m2d,0),util=pl.length?pl.reduce((s,p)=>s+p.plancha.util,0)/pl.length:0;
+  const pag=ps.filter(p=>['pagado','preparando','listo','entregado'].includes(p.estado)),tick=pag.length?pag.reduce((s,p)=>s+pedTotal(p),0)/pag.length:0;
+  return `<div class="intro" style="--m:var(--ink)"><span class="mb">$</span><div><h2>Panel del dueño</h2><p>Todos los trabajos que entran por las tres vías, con el PDF de cada plancha o pliego listo para mandar a la impresora. Abajo ajustás precios, anchos de rollo, pliegos y cómo cobrás.</p></div></div>
+  <div class="kpis">
+   <div class="card kpi"><span>Pedidos</span><b>${ps.length}</b></div>
+   <div class="card kpi"><span>Ticket promedio (cobrados)</span><b>${fmt(tick)}</b></div>
+   <div class="card kpi"><span>Planchas listas para imprimir</span><b>${pl.length}</b></div>
+   <div class="card kpi"><span>Aprovechamiento promedio del material</span><b>${pct(util)}</b></div></div>
+  <div class="card"><div class="cardhead"><h2>Pedidos</h2><span class="small muted">${fN(m2,2)} m² de diseños en planchas</span></div><ul class="orders">${ps.map(orderHTML).join('')}</ul></div>
+  <div class="owner-grid">
+   <div class="card"><h2>Precios de rollos y pliegos</h2><p class="small muted">Cambiás un valor y queda al instante en las tres vías. Los pedidos ya hechos mantienen su precio.${S.priceUpdated?` Última actualización: <b>${ago(S.priceUpdated)}</b>.`:''}</p>
+    <div class="tablewrap"><table class="cfg"><thead><tr><th scope="col">Material</th><th scope="col" class="r">Precio por m²</th><th scope="col" class="r">Ancho de rollo (cm)</th></tr></thead><tbody>${MATS.map(m=>`<tr><td>${esc(m.name)}</td><td class="r"><label class="sr" for="pm-${m.id}">Precio por m² de ${esc(m.name)}</label><input class="in" id="pm-${m.id}" data-cfgm="${m.id}" data-k="m2" inputmode="numeric" value="${Math.round(m.m2)}"></td><td class="r"><label class="sr" for="pr-${m.id}">Ancho de rollo de ${esc(m.name)}</label><input class="in" id="pr-${m.id}" data-cfgm="${m.id}" data-k="roll" inputmode="decimal" value="${fN(m.roll/10,1)}"></td></tr>`).join('')}</tbody></table></div>
+    <div class="tablewrap"><table class="cfg"><thead><tr><th scope="col">Pliego</th><th scope="col" class="r">Precio por pliego SRA3</th></tr></thead><tbody>${SHEETMATS.map(m=>`<tr><td>${esc(m.name)}</td><td class="r"><label class="sr" for="pp-${m.id}">Precio por pliego de ${esc(m.name)}</label><input class="in" id="pp-${m.id}" data-cfgm="${m.id}" data-k="pl" inputmode="numeric" value="${Math.round(m.pl)}"></td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted">A4, A3 y las medidas personalizadas se calculan en proporción a la superficie del SRA3.</p>
+    <div class="row" style="align-items:flex-end"><label class="f" for="pct" style="flex:1">Aumentar todo (%)<input class="in" id="pct" inputmode="decimal" value="5"></label><button class="btn primary" data-act="applyPct" style="--m:var(--ink);--on-m:var(--bg)">Aplicar a materiales y productos</button></div></div>
+   <div class="card"><h2>Cómo arma y cobra planchas y pliegos</h2>
+    ${calHTML(CFG.calO,'data-act="calO" style="--m:var(--ink)"','Calidad del PDF al bajar los pedidos')}
+    <p class="small muted" style="margin-top:-4px">Es la que se usa en “Bajar PDF” de cada pedido, sin importar con qué calidad lo armó el cliente.</p>
+    <div class="fields"><label class="f" for="cf-gapp">Espacio automático en pliego (mm)<input class="in" id="cf-gapp" data-cfg="gapPl" inputmode="decimal" value="${CFG.gapPl}"></label><label class="f" for="cf-gap">Espacio automático en rollo (mm)<input class="in" id="cf-gap" data-cfg="gap" inputmode="decimal" value="${CFG.gap}"></label><label class="f" for="cf-gapl">Espacio automático en lonas (mm)<input class="in" id="cf-gapl" data-cfg="gapLona" inputmode="decimal" value="${CFG.gapLona}"></label><label class="f" for="cf-mar">Margen del rollo (mm)<input class="in" id="cf-mar" data-cfg="margin" inputmode="decimal" value="${CFG.margin}"></label><label class="f" for="cf-marp">Margen del pliego, pinza (mm)<input class="in" id="cf-marp" data-cfg="marginPl" inputmode="decimal" value="${CFG.marginPl}"></label><label class="f" for="cf-min">Mínimo a cobrar (m lineales)<input class="in" id="cf-min" data-cfg="minMl" inputmode="decimal" value="${fN(CFG.minMl,2)}"></label></div>
+    <div class="opts"><button class="opt" aria-pressed="${CFG.cobro==='ml'}" data-act="cobro" data-v="ml" style="--m:var(--ink)"><b>Por metro lineal</b><small>Cobrás el largo de rollo usado, a ancho completo</small></button><button class="opt" aria-pressed="${CFG.cobro==='m2'}" data-act="cobro" data-v="m2" style="--m:var(--ink)"><b>Solo superficie de diseños</b><small>Cobrás únicamente los m² impresos</small></button></div>
+    <p class="small muted">Las tres vías usan esta misma configuración.</p></div>
+  </div>
+  <div class="card"><h2>¿Cuál conviene? Las tres formas</h2>${cmpHTML()}</div>`;
+}
+const ORIGEN={A:'Lo cotizó el vendedor',B:'Lo armó el cliente desde la app',C:'Revendedor, con precio de gremio'};
+function pagoTxt(p){if(p.pago)return p.pago==='Mercado Pago'?'Mercado Pago':p.pago+' · cobrado en el local';if(p.online)return 'Mercado Pago (online)';if(p.estado==='esperando')return 'Pendiente: link enviado';if(p.estado==='confirmar')return 'Pendiente: paga al retirar';return 'Cobrado en el local';}
+function isOpen(p){return S.O.open[p.id]===true||(S.O.open[p.id]!==false&&['pagado','confirmar','preparando'].includes(p.estado));}
+function orderHTML(p){
+  const f=FLOW[p.estado],c=MODES[p.mode].color;let act='';
+  if(p.plancha)act+=`<button class="btn sm" data-act="pdfO" data-id="${p.id}">Bajar PDF</button>`;
+  if(p.estado==='esperando')act+=`<button class="btn sm" data-act="preview" data-id="${p.id}">Ver link del cliente</button>`;
+  if(p.estado==='esperando'||p.estado==='confirmar')act+=`<button class="btn sm primary" style="--m:var(--ink);--on-m:var(--bg)" data-act="cobrar" data-id="${p.id}">Ya pagó: registrar cobro</button>`;
+  if(p.estado==='listo')act+=`<a class="btn sm" href="${waLink(p.tel,`Hola ${p.cliente.split(' ')[0]}, tu pedido #${pad(p.id)} de ${STORE.name} está listo. Podés retirarlo por ${STORE.addr}.`)}" target="_blank" rel="noopener">Avisar por WhatsApp</a>`;
+  if(f)act+=`<button class="btn sm primary" style="--m:var(--ink);--on-m:var(--bg)" data-act="adv" data-id="${p.id}">${f[1]}</button>`;
+  const fecha=new Date(p.t).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+  const pl=p.plancha;
+  const det=`<details class="odet" data-id="${p.id}" ${isOpen(p)?'open':''}><summary>Ver detalle del pedido</summary><div class="detgrid">
+   <dl class="dinfo"><dt>Cliente</dt><dd>${esc(p.cliente)}</dd><dt>WhatsApp</dt><dd>${p.tel?esc(p.tel):'—'}</dd><dt>Fecha</dt><dd>${fecha}</dd><dt>Origen</dt><dd>${ORIGEN[p.mode]}</dd><dt>Pago</dt><dd>${pagoTxt(p)}</dd>${pl?`<dt>Formato</dt><dd>${fmtTxt(pl)}</dd><dt>Aprovechamiento</dt><dd>${pct(pl.util)}</dd>`:''}</dl>
+   <div class="tablewrap"><table class="det"><thead><tr><th scope="col">Cant.</th><th scope="col">${pl?'Diseño':'Trabajo'}</th><th scope="col">${pl?'Medida':'Detalle'}</th><th scope="col" class="r">${pl?'':'Subtotal'}</th></tr></thead><tbody>
+   ${pl?pl.items.map(i=>`<tr><td class="num">${i.qty}</td><td style="overflow-wrap:anywhere">${esc(i.name)}</td><td class="num">${fN(i.wmm/10,1)} × ${fN(i.hmm/10,1)} cm</td><td></td></tr>`).join(''):p.lines.map(l=>`<tr><td class="num">${l.q}</td><td>${esc(l.name)}</td><td>${esc(l.detail)}</td><td class="r num">${fmt(lineTotal(l))}</td></tr>`).join('')}
+   </tbody><tfoot><tr><th scope="row" colspan="3">Total${pl?' · '+esc(matBy(pl.mat).name):''}</th><td class="r num"><b>${fmt(pedTotal(p))}</b></td></tr></tfoot></table></div></div></details>`;
+  return `<li class="order"><span class="mb" style="--m:${c}">${p.mode}</span><div class="who"><b>#${pad(p.id)} · ${esc(p.cliente)}</b><span class="muted small">${pl?`${pl.fmt.type==='pliego'?fmtTxt(pl):'Plancha'} · ${pl.count} diseños`:p.lines.length+' trabajos'} · ${ago(p.t)}${p.online?' · pagó online':''}</span></div><span class="num"><b>${fmt(pedTotal(p))}</b></span><div class="oact"><span class="pill ${E[p.estado].cls}">${E[p.estado].label}</span>${act}</div>${det}</li>`;
+}
+function cmpHTML(){
+  const rows=[
+   ['Quién arma el pedido','El vendedor, con las imágenes que trae el cliente','El cliente, con sus propias imágenes','El diseñador o revendedor'],
+   ['Archivo para imprimir','La app arma el pliego y saca el PDF: nadie edita a mano','Llega el PDF armado a tamaño real','Llega el PDF armado a tamaño real'],
+   ['Tiempo del vendedor','1 a 2 min por trabajo','Ninguno','Ninguno'],
+   ['Funciona con el local cerrado','No','Sí','Sí'],
+   ['Ideal para','Trabajos a medida: lonas, ploteos, papelería','Calcos, stickers y etiquetas','Clientes que compran todas las semanas']
+  ];
+  return `<div class="tablewrap"><table class="cmp"><thead><tr><th scope="col"></th>${['A','B','C'].map(m=>`<th scope="col" style="--m:${MODES[m].color}"><span class="mb">${m}</span>${MODES[m].tab}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><th scope="row">${r[0]}</th><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* modal del cliente */
+const modal=$('modal'),mbody=$('modal-body');let lastFocus=null;
+function cobroHTML(p){return `<div class="phone" style="--m:var(--ink)"><h2 style="font-size:18px;margin:0">Registrar cobro del pedido #${pad(p.id)}</h2><p class="small">${esc(p.cliente)} · <b>${fmt(pedTotal(p))}</b></p><p class="small muted">¿Cómo pagó?</p><div class="stack" style="gap:8px"><button type="button" class="opt" data-act="cobrarOk" data-id="${p.id}" data-v="Efectivo"><b>💵 Efectivo</b></button><button type="button" class="opt" data-act="cobrarOk" data-id="${p.id}" data-v="Transferencia"><b>🏦 Transferencia</b></button><button type="button" class="opt" data-act="cobrarOk" data-id="${p.id}" data-v="Débito"><b>💳 Débito</b></button><button type="button" class="opt" data-act="cobrarOk" data-id="${p.id}" data-v="Crédito"><b>💳 Crédito</b></button><button type="button" class="opt" data-act="cobrarOk" data-id="${p.id}" data-v="Mercado Pago"><b>📲 Mercado Pago</b></button></div><button class="btn" data-act="close">Cancelar</button></div>`;}
+function openModal(h){lastFocus=document.activeElement;mbody.innerHTML=h;modal.classList.add('open');const b=mbody.querySelector('button');if(b)b.focus();}
+function closeModal(){modal.classList.remove('open');mbody.innerHTML='';if(lastFocus&&document.contains(lastFocus))lastFocus.focus();}
+function phoneHead(){return `<div class="phone-head"><span class="logo" aria-hidden="true"><i style="background:#00a3d9"></i><i style="background:#d6246e"></i><i style="background:#f2c200"></i><i style="background:#15171c"></i></span><div><b>${STORE.name}</b><small>${STORE.addr}</small></div></div>`;}
+function proofImg(pl){try{const c=document.createElement('canvas');drawSheets(c,layout(pl.fmt,pl.items,pl.rotate),300);return `<div class="proof"><img src="${c.toDataURL('image/png')}" alt="Prueba del ${pl.fmt.type==='rollo'?'rollo':'pliego'} a escala"><small>Prueba a escala · el PDF va adjunto en el chat</small></div>`;}catch(e){return '';}}
+function previewHTML(p){return `<div class="phone" style="--m:${MODES[p.mode].color}">${phoneHead()}<p>Hola ${esc(p.cliente.split(' ')[0])}, este es tu pedido <b>#${pad(p.id)}</b>:</p>${p.plancha?proofImg(p.plancha):''}<ul class="lines">${p.lines.map(l=>`<li class="line" style="grid-template-columns:minmax(0,1fr) auto"><div><span class="pname">${l.q>1?l.q+' × ':''}${esc(l.name)}</span><span class="ppres">${esc(l.detail)}</span></div><span class="num">${fmt(lineTotal(l))}</span></li>`).join('')}</ul><div class="tot"><span>Total</span><span>${fmt(pedTotal(p))}</span></div><p class="small muted">Retirás en ${STORE.addr}. Te avisamos por WhatsApp cuando esté listo.</p><button class="btn mp" data-act="pay" data-id="${p.id}">Pagar con Mercado Pago</button><button class="btn" data-act="close">Cerrar</button></div>`;}
+function paidHTML(p){return `<div class="phone">${phoneHead()}<p class="ok-big">Pago aprobado</p><p>Tu pedido <b>#${pad(p.id)}</b> por <b>${fmt(pedTotal(p))}</b> ya está en la gráfica${p.plancha?', con tu plancha lista para imprimir':''}. Te avisamos por WhatsApp cuando esté listo.</p><p class="small muted">Simulación: no se cobró nada. En el panel del dueño figura como “Pagado · a imprimir”.</p><button class="btn" data-act="close">Listo</button></div>`;}
+
+/* render */
+function checkPrueba(){
+  if(!PRUEBA_HASTA)return;const fin=new Date(PRUEBA_HASTA);if(isNaN(fin))return;
+  const show=()=>{if(Date.now()<fin.getTime())return false;const d=document.createElement('div');d.className='vencido';d.setAttribute('role','alertdialog');d.setAttribute('aria-modal','true');
+    const wa=CONTACTO_WA?waLink(CONTACTO_WA,`Hola, terminó la prueba de la app de ${STORE.name} y quiero seguir usándola.`):'';
+    d.innerHTML=`<div class="vbox"><h2>Terminó la prueba de 3 días</h2><p>Gracias por probar la app de <b>${esc(STORE.name)}</b>. Para seguir usándola con tus precios, tu logo y los pedidos en tiempo real, escribinos.</p>${wa?`<a class="btn wa big" href="${wa}" target="_blank" rel="noopener">Escribir por WhatsApp</a>`:''}<p class="small muted">${esc(CONTACTO_NOMBRE)}</p></div>`;
+    document.body.appendChild(d);document.body.style.overflow='hidden';return true;};
+  if(!show()){const ms=fin.getTime()-Date.now();if(ms<2147483647)setTimeout(show,ms);}
+  const left=fin.getTime()-Date.now(),flag=document.querySelector('.flag');
+  if(flag&&left>0&&!SOLO_CLIENTE){const hrs=Math.ceil(left/3600000);flag.textContent=hrs>48?`Prueba: quedan ${Math.floor(hrs/24)} días`:`Prueba: quedan ${hrs} h`;}
+}
+function applySolo(){document.body.classList.toggle('solo',!!S.solo);const sb=document.getElementById('solobar');if(sb)sb.hidden=!S.solo;const h=document.getElementById('brandname');if(h)h.textContent=S.solo?STORE.name:'Demo Gráfica Salinas';}
+function render(){
+  tabs();const app=$('app');const m={vendedor:'A',cliente:'B',revendedor:'C'}[S.view];
+  app.style.setProperty('--m',m?MODES[m].color:'var(--ink)');app.style.setProperty('--on-m',m?'var(--on-accent)':'var(--bg)');
+  app.innerHTML=S.view==='vendedor'?viewA():S.view==='cliente'?viewPl('B'):S.view==='revendedor'?viewPl('C'):viewO();
+  const pm=curMode();if(pm){scheduleDraw();if(S[pm].sel)updateEditor(pm);}
+}
+function go(v){if(!VIEWS.includes(v))v='vendedor';S.view=v;try{history.replaceState(null,'','#'+v);}catch(e){}render();window.scrollTo(0,0);}
+
+/* eventos */
+document.addEventListener('click',e=>{
+  if(e.target===modal){closeModal();return;}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act,mode=b.dataset.mode,id=b.dataset.id;
+  if(a==='solo'){if(!S.solo){S.prevView=S.view;S.solo=true;S.view='cliente';}else{S.solo=false;S.view=S.prevView||'vendedor';}render();applySolo();window.scrollTo(0,0);return;}
+  switch(a){
+   case 'tab':go(b.dataset.v);break;
+   case 'subA':S.A.sub=b.dataset.v;render();break;
+   case 'size':S[mode].size=b.dataset.v;S[mode].sent=null;rerenderC1(mode);break;
+   case 'roll':S[mode].roll=b.dataset.v;S[mode].sent=null;rerenderC1(mode);break;
+   case 'mtab':{const st=S[mode];const cur=matBy(st.mat);if(cur.type===b.dataset.v)break;st.mat=b.dataset.v==='pliego'?'ilus':'vin';st.terms=[];st.pg=0;st.roll='';st.sent=null;rerenderC1(mode);break;}
+   case 'term':{const st=S[mode],t=TERMS.find(x=>x.id===b.dataset.v);let ts=(st.terms||[]).slice();if(ts.includes(t.id))ts=ts.filter(x=>x!==t.id);else{if(t.grp)ts=ts.filter(x=>{const o=TERMS.find(y=>y.id===x);return !o||o.grp!==t.grp;});ts.push(t.id);}st.terms=ts;st.sent=null;rerenderC1(mode);break;}
+   case 'pgrp':{const st=S[mode];st.pg=+b.dataset.i;const pr=$('presets-'+mode);if(pr)pr.innerHTML=presetsHTML(mode);break;}
+   case 'waProof':waProof(b);break;
+   case 'gap':{const st=S[mode];if(b.dataset.v==='auto')st.gapMode='auto';else{st.gapMode='manual';st.gapMm=b.dataset.v;}st.sent=null;$('gap-'+mode).innerHTML=gapHTML(mode);updateEditor(mode);refreshPl(mode);break;}
+   case 'reacomodar':{const st=S[mode],f=fmtOf(st),before=layout(f,st.items,st.rotate);b.disabled=true;b.textContent='Buscando…';
+     setTimeout(()=>{const imp=optimizeLayout(f,st.items,st.rotate,{force:true,ms:1200,seed:(Date.now()%100000)+7});const after=layout(f,st.items,st.rotate);
+       refreshPl(mode);
+       if(!imp)toast('Ya está en el mejor acomodo que encontré.');
+       else if(f.type==='rollo')toast(`Reacomodado: ahorraste ${fN((before.length-after.length)/10,1)} cm de rollo.`);
+       else toast(after.sheets.length<before.sheets.length?`Reacomodado: ahora entra en ${after.sheets.length} ${plural(after.sheets.length,'pliego','pliegos')}.`:'Reacomodado: quedó más espacio libre en el último pliego.');},30);break;}
+   case 'savePl':{const st=S.P;const pl=snapshotPlancha(st,1);if(!pl.count)break;const local=b.dataset.v==='local';st.shared=null;
+     const p=crearPedido('A',{cliente:st.cliente,tel:st.tel,lines:[planchaLine(pl,'Pliego')],plancha:pl,estado:local?'pagado':'esperando',armado:st.start?(Date.now()-st.start)/1000:null});st.sent=p.id;tabs();refreshPl('P');break;}
+   case 'newP':S.P=freshP();S.P.cliente='';S.P.tel='';render();break;
+   case 'addA':{const st=S.A;if(!st.lines.length)st.start=Date.now();const q=Math.max(1,Math.round(num(st.cant)));
+     if(st.prod.startsWith('m:')){const an=num(st.ancho),al=num(st.alto);if(!an||!al){toast('Completá ancho y alto.');break;}st.lines.push(lineM2(st.prod.slice(2),an,al,q));}
+     else st.lines.push(lineUnit(st.prod.slice(2),q));
+     $('a-cart').innerHTML=cartAHTML();break;}
+   case 'rmA':S.A.lines.splice(+b.dataset.i,1);$('a-cart').innerHTML=cartAHTML();break;
+   case 'sendA':{if(!S.A.lines.length)break;const p=crearPedido('A',{cliente:S.A.cliente,tel:S.A.tel,lines:S.A.lines.slice(),estado:'esperando',armado:(Date.now()-S.A.start)/1000});S.A.sent=p.id;tabs();$('a-cart').innerHTML=cartAHTML();break;}
+   case 'newA':S.A=freshA();S.A.lines=[];S.A.cliente='';S.A.tel='';render();break;
+   case 'preview':{const p=S.pedidos.find(x=>x.id===+id);if(p)openModal(previewHTML(p));break;}
+   case 'pay':{const p=S.pedidos.find(x=>x.id===+id);if(!p)break;p.estado='pagado';p.online=true;mbody.innerHTML=paidHTML(p);mbody.querySelector('button').focus();tabs();if(S.view==='duenio')render();break;}
+   case 'close':closeModal();break;
+   case 'copy':{const pre=b.closest('.done')&&b.closest('.done').querySelector('.msg');if(!pre)break;try{navigator.clipboard.writeText(pre.textContent).then(()=>{b.textContent='Copiado';},()=>{b.textContent='No se pudo copiar';});}catch(err){b.textContent='No se pudo copiar';}break;}
+   case 'mat':{const st=S[mode];if(st.mat===b.dataset.v)break;const k0=presetKey(st.mat);st.mat=b.dataset.v;st.terms=(st.terms||[]).filter(id=>termsFor(matBy(st.mat)).some(t=>t.id===id));st.roll='';if(presetKey(st.mat)!==k0)st.pg=0;st.sent=null;rerenderC1(mode);break;}
+   case 'pick':{const g=GALLERY[+b.dataset.i];if(!g||!g.img.complete){toast('Cargando la imagen…');break;}openEditor(mode,g.name,g.img);break;}
+   case 'back':backGallery(mode);break;
+   case 'preset':{const st=S[mode];st.mw=b.dataset.w;st.mh=b.dataset.h;$('mw-'+mode).value=fN(num(st.mw));$('mh-'+mode).value=fN(num(st.mh));updateEditor(mode);break;}
+   case 'girar':{const st=S[mode];st.giro=!st.giro;const t=st.mw;st.mw=st.mh;st.mh=t;$('mw-'+mode).value=st.mw;$('mh-'+mode).value=st.mh;updateEditor(mode);break;}
+   case 'ajuste':S[mode].ajuste=b.dataset.v;b.parentElement.querySelectorAll('.opt').forEach(o=>o.setAttribute('aria-pressed',String(o===b)));updateEditor(mode);break;
+   case 'fill1m':{const st=S[mode];const m=maxCopias(st,num(st.mw)*10,num(st.mh)*10);if(!m.n){toast('Esa medida no entra.');break;}st.cant=String(m.n);$('cant-'+mode).value=st.cant;updateEditor(mode);break;}
+   case 'addPl':addToPlancha(mode);break;
+   case 'rmItem':S[mode].items=S[mode].items.filter(i=>i.id!==id);S[mode].sent=null;$('list-'+mode).innerHTML=listHTML(mode);updateEditor(mode);refreshPl(mode);break;
+   case 'vaciar':S[mode].items=[];S[mode].sent=null;if(mode==='P')S.P.start=null;$('list-'+mode).innerHTML=listHTML(mode);updateEditor(mode);refreshPl(mode);break;
+   case 'calpdf':S[mode].cal=b.dataset.v;refreshPl(mode);break;
+   case 'calO':CFG.calO=b.dataset.v;render();break;
+   case 'pdf':{const st=S[mode],slug=mode==='P'&&st.cliente?st.cliente.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)+'-':'';doPdf(st.items,fmtOf(st),st.rotate,st.cal,`${mode==='P'?'pliego':'plancha'}-${slug}${matBy(st.mat).id}-${new Date().toISOString().slice(0,10)}.pdf`,b);break;}
+   case 'payPl':{const st=S[mode];const pl=snapshotPlancha(st,factorOf(mode));if(!pl.count)break;const p=crearPedido(mode,{cliente:mode==='C'?'Estudio Nube (revendedor)':(S.B.cliente||'Cliente web'),tel:st.tel,lines:[planchaLine(pl,mode==='C'?'Plancha gremio':'Plancha')],plancha:pl,estado:'esperando'});tabs();openModal(previewHTML(p));break;}
+   case 'waPl':{const pl=snapshotPlancha(S.B,1);if(!pl.count)break;const p=crearPedido('B',{cliente:S.B.cliente||'Cliente web',tel:S.B.tel,lines:[planchaLine(pl)],plancha:pl,estado:'confirmar'});S.B.sent=p.id;tabs();refreshPl('B');break;}
+   case 'pdfO':{const p=S.pedidos.find(x=>x.id===+id);if(!p||!p.plancha)break;const pl=p.plancha;doPdf(pl.items,pl.fmt,pl.rotate,CFG.calO,`pedido-${pad(p.id)}-${pl.mat}.pdf`,b);break;}
+    case 'cobrar':{const p=S.pedidos.find(x=>x.id===+id);if(p)openModal(cobroHTML(p));break;}
+    case 'cobrarOk':{const p=S.pedidos.find(x=>x.id===+id);if(!p)break;p.estado='pagado';p.pago=b.dataset.v;p.online=b.dataset.v==='Mercado Pago';p.cobrado=Date.now();closeModal();tabs();render();(typeof toast==='function')&&toast('Pedido #'+pad(p.id)+' cobrado: '+b.dataset.v.toLowerCase()+'. Pasó a «Pagado».');break;}
+   case 'adv':{const p=S.pedidos.find(x=>x.id===+id);if(p&&FLOW[p.estado]){p.estado=FLOW[p.estado][0];render();}break;}
+   case 'cobro':CFG.cobro=b.dataset.v;S.priceUpdated=Date.now();render();break;
+   case 'applyPct':{const v=parseFloat(String($('pct').value).replace(',','.'));if(!isFinite(v)||v===0)break;MATS.forEach(m=>m.m2=r100(m.m2*(1+v/100)));SHEETMATS.forEach(m=>m.pl=r100(m.pl*(1+v/100)));UNITS.forEach(u=>u.price=r100(u.price*(1+v/100)));S.priceUpdated=Date.now();render();toast('Precios actualizados '+fN(v)+'%');break;}
+  }
+});
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.dataset.a){S.A[el.dataset.a]=el.value;if(el.dataset.a==='prod'){$('a-fields').innerHTML=prodFieldsHTML();}else if(['ancho','alto','cant'].includes(el.dataset.a)){const p=$('a-prev');if(p){const tmp=document.createElement('div');tmp.innerHTML=prodFieldsHTML();const np=tmp.querySelector('#a-prev');if(np)p.innerHTML=np.innerHTML;}}return;}
+  if(el.dataset.ed){const st=S[el.dataset.mode];st[el.dataset.ed]=el.value;updateEditor(el.dataset.mode);return;}
+  if(el.dataset.it){const md=el.dataset.mode,st=S[md],it=st.items.find(i=>i.id===el.dataset.it);if(!it)return;const k=el.dataset.k||'qty';
+    if(k==='qty')it.qty=Math.max(0,Math.round(num(el.value)));
+    else{const v=num(el.value);if(!v)return;const mm=Math.round(v*10);const f=fmtOf(st);const nw=k==='w'?mm:it.wmm,nh=k==='h'?mm:it.hmm;if(!fitsFmt(f,nw,nh,st.rotate)){el.setAttribute('aria-invalid','true');return;}el.removeAttribute('aria-invalid');it.wmm=nw;it.hmm=nh;const pc=$('pc-'+it.id);if(pc)pc.innerHTML=calPill(pppOf(it));}
+    st.sent=null;updateEditor(md);refreshPl(md);return;}
+  if(el.dataset.fmt){const md=el.dataset.mode;S[md][el.dataset.fmt]=el.value;S[md].sent=null;updateEditor(md);refreshPl(md);return;}
+  if(el.dataset.p){S.P[el.dataset.p]=el.value;return;}
+  if(el.dataset.gap){const md=el.dataset.gap,st=S[md];if(String(el.value).trim()===''){st.gapMode='auto';}else{const v=parseFloat(String(el.value).replace(',','.'));if(!isFinite(v)||v<0)return;st.gapMode='manual';st.gapMm=String(v);}st.sent=null;
+    $('gap-'+md).querySelectorAll('[data-act="gap"]').forEach(c=>{const v=c.dataset.v;c.setAttribute('aria-pressed',String(v==='auto'?st.gapMode!=='manual':st.gapMode==='manual'&&+v===gapOf(st)));});
+    const t=$('gaptxt-'+md);if(t)t.textContent=gapTxt(st);updateEditor(md);refreshPl(md);return;}
+  if(el.dataset.b){S.B[el.dataset.b]=el.value;return;}
+  if(el.dataset.c){S.C[el.dataset.c]=el.value;if(el.dataset.c==='markup'){refreshPl('C');const n=$('c-mk');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length);}}return;}
+});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset.upload){loadUploads(el.files,el.dataset.upload);el.value='';return;}
+  if(el.dataset.rot){S[el.dataset.rot].rotate=el.checked;updateEditor(el.dataset.rot);refreshPl(el.dataset.rot);return;}
+  if(el.dataset.cfgm){const m=matBy(el.dataset.cfgm),v=num(el.value);if(!m||!v){render();return;}if(el.dataset.k==='m2')m.m2=r100(v);else if(el.dataset.k==='pl')m.pl=r100(v);else m.roll=Math.round(v*10);S.priceUpdated=Date.now();return;}
+  if(el.dataset.cfg){const v=parseFloat(String(el.value).replace(',','.'));if(isFinite(v)&&v>=0){CFG[el.dataset.cfg]=v;S.priceUpdated=Date.now();LCACHE.clear();}return;}
+});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('odet'))S.O.open[d.dataset.id]=d.open;},true);
+['dragover','dragenter'].forEach(t=>document.addEventListener(t,e=>{const d=e.target.closest&&e.target.closest('[data-drop]');if(d){e.preventDefault();d.classList.add('over');}}));
+['dragleave','drop'].forEach(t=>document.addEventListener(t,e=>{const d=e.target.closest&&e.target.closest('[data-drop]');if(d){d.classList.remove('over');if(t==='drop'){e.preventDefault();if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)loadUploads(e.dataTransfer.files,d.dataset.drop);}}}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
+window.addEventListener('hashchange',()=>{if(S.solo)return;const v=location.hash.slice(1);if(VIEWS.includes(v)&&v!==S.view){S.view=v;render();}});
+window.addEventListener('resize',scheduleDraw);
+setInterval(()=>{const t=$('a-timer');if(t)t.textContent=timerTxt();const tp=$('p-timer');if(tp)tp.textContent=timerP();},1000);
+
+const SOLO_CLIENTE=(()=>{try{const q=new URLSearchParams(location.search);return q.has('cliente');}catch(e){return false;}})();
+S.B.items=sampleItems('B');S.C.items=sampleItems('C');S.P.items=sampleItems('P');
+const h=location.hash.slice(1);S.view=VIEWS.includes(h)?h:'vendedor';
+if(SOLO_CLIENTE){S.solo=true;S.view='cliente';document.body.classList.add('solo-fijo');}
+(async()=>{
+  const ok=await loadSaved();if(!ok){seed();queueSave();}
+  render();applySolo();checkPrueba();
+})();
+document.addEventListener('click',()=>queueSave());
+})();
+</script>
+</body>
+</html>
